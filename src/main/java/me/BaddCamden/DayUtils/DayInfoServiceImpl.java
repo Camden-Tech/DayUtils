@@ -109,10 +109,14 @@ class DayInfoServiceImpl implements DayInfoService {
     }
 
     private double configuredDayLength() {
-        return Math.max(1.0D, settingsSupplier.get().dayLengthTicks());
+        DaySettings settings = settingsSupplier.get();
+        double speed = Math.max(0.0001D, settings.speedMultiplier());
+        return Math.max(1.0D, settings.dayLengthTicks()) / speed;
     }
 
     private double configuredNightLength() {
-        return Math.max(1.0D, settingsSupplier.get().nightLengthTicks());
+        DaySettings settings = settingsSupplier.get();
+        double speed = Math.max(0.0001D, settings.speedMultiplier());
+        return Math.max(1.0D, settings.nightLengthTicks()) / speed;
     }
 }

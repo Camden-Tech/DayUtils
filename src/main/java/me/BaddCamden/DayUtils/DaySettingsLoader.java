@@ -29,6 +29,12 @@ public class DaySettingsLoader {
             modified = true;
         }
 
+        double speed = config.getDouble("day.speed", 1.0D);
+        if (!config.contains("day.speed")) {
+            config.set("day.speed", speed);
+            modified = true;
+        }
+
         ConfigurationSection customSection = config.getConfigurationSection("day.customTypes");
         if (customSection == null) {
             customSection = config.createSection("day.customTypes");
@@ -52,8 +58,37 @@ public class DaySettingsLoader {
             modified = true;
         }
 
+        String setDayLengthPermission =
+                config.getString("commands.setDayLengthPermission", "dayutils.setdaylength");
+        if (!config.contains("commands.setDayLengthPermission")) {
+            config.set("commands.setDayLengthPermission", setDayLengthPermission);
+            modified = true;
+        }
+
+        String setNightLengthPermission =
+                config.getString("commands.setNightLengthPermission", "dayutils.setnightlength");
+        if (!config.contains("commands.setNightLengthPermission")) {
+            config.set("commands.setNightLengthPermission", setNightLengthPermission);
+            modified = true;
+        }
+
+        String setSpeedPermission = config.getString("commands.setSpeedPermission", "dayutils.setspeed");
+        if (!config.contains("commands.setSpeedPermission")) {
+            config.set("commands.setSpeedPermission", setSpeedPermission);
+            modified = true;
+        }
+
         DaySettings settings =
-                new DaySettings(dayLength, nightLength, customTypes, reloadPermission, triggerPermission);
+                new DaySettings(
+                        dayLength,
+                        nightLength,
+                        speed,
+                        customTypes,
+                        reloadPermission,
+                        triggerPermission,
+                        setDayLengthPermission,
+                        setNightLengthPermission,
+                        setSpeedPermission);
         return new LoadResult(settings, modified);
     }
 

@@ -26,6 +26,8 @@ public class DayCycleListener implements Listener {
                                 + settings.dayLengthTicks()
                                 + " ticks, Night: "
                                 + settings.nightLengthTicks()
+                                + " ticks, Speed: x"
+                                + settings.speedMultiplier()
                                 + ". Current phase: "
                                 + phase
                                 + " ("
