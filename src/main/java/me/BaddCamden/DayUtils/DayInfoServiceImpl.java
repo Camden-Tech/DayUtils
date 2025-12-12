@@ -2,6 +2,7 @@ package me.BaddCamden.DayUtils;
 
 import java.util.Locale;
 import java.util.Objects;
+import java.util.function.Supplier;
 import me.BaddCamden.DayUtils.api.DayInfoService;
 import org.bukkit.World;
 
@@ -10,9 +11,11 @@ class DayInfoServiceImpl implements DayInfoService {
     private static final long HALF_DAY_TICKS = FULL_DAY_TICKS / 2;
 
     private final CustomDayScheduler scheduler;
+    private final Supplier<DaySettings> settingsSupplier;
 
-    DayInfoServiceImpl(CustomDayScheduler scheduler) {
+    DayInfoServiceImpl(CustomDayScheduler scheduler, Supplier<DaySettings> settingsSupplier) {
         this.scheduler = Objects.requireNonNull(scheduler, "scheduler");
+        this.settingsSupplier = Objects.requireNonNull(settingsSupplier, "settingsSupplier");
     }
 
     @Override
@@ -27,9 +30,9 @@ class DayInfoServiceImpl implements DayInfoService {
         }
 
         double time = normalizeTime(world);
-        double elapsedDayTicks = time;
-        double progress = elapsedDayTicks / HALF_DAY_TICKS;
-        return clamp(progress);
+        double configuredDayLength = configuredDayLength();
+        double elapsed = (time / HALF_DAY_TICKS) * configuredDayLength;
+        return clamp(elapsed / configuredDayLength);
     }
 
     @Override
@@ -44,8 +47,9 @@ class DayInfoServiceImpl implements DayInfoService {
         }
 
         double time = normalizeTime(world) - HALF_DAY_TICKS;
-        double progress = time / HALF_DAY_TICKS;
-        return clamp(progress);
+        double configuredNightLength = configuredNightLength();
+        double elapsed = (time / HALF_DAY_TICKS) * configuredNightLength;
+        return clamp(elapsed / configuredNightLength);
     }
 
     @Override
@@ -56,8 +60,21 @@ class DayInfoServiceImpl implements DayInfoService {
         }
 
         double time = normalizeTime(world);
-        double progress = time / FULL_DAY_TICKS;
-        return clamp(progress);
+        double dayLength = configuredDayLength();
+        double nightLength = configuredNightLength();
+        double totalLength = dayLength + nightLength;
+
+        if (totalLength <= 0.0D) {
+            return 0.0D;
+        }
+
+        if (time < HALF_DAY_TICKS) {
+            double elapsedDay = (time / HALF_DAY_TICKS) * dayLength;
+            return clamp(elapsedDay / totalLength);
+        }
+
+        double elapsedNight = ((time - HALF_DAY_TICKS) / HALF_DAY_TICKS) * nightLength;
+        return clamp((dayLength + elapsedNight) / totalLength);
     }
 
     @Override
@@ -89,5 +106,13 @@ class DayInfoServiceImpl implements DayInfoService {
 
     private double normalizeTime(World world) {
         return world.getTime() % FULL_DAY_TICKS;
+    }
+
+    private double configuredDayLength() {
+        return Math.max(1.0D, settingsSupplier.get().dayLengthTicks());
+    }
+
+    private double configuredNightLength() {
+        return Math.max(1.0D, settingsSupplier.get().nightLengthTicks());
     }
 }

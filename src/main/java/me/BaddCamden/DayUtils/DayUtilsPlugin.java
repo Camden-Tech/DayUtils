@@ -83,7 +83,7 @@ public class DayUtilsPlugin extends JavaPlugin {
     }
 
     private void initializeDayInfoService() {
-        dayInfoService = new DayInfoServiceImpl(timeController.getCustomDayScheduler());
+        dayInfoService = new DayInfoServiceImpl(timeController.getCustomDayScheduler(), this::getSettings);
         api.setDayInfoService(dayInfoService);
     }
 }
