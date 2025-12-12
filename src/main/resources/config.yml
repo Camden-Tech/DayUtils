@@ -6,3 +6,4 @@ day:
     # sunset: 1000
 commands:
   reloadPermission: dayutils.reload
+  triggerPermission: dayutils.trigger

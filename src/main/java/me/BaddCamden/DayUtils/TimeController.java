@@ -3,6 +3,7 @@ package me.BaddCamden.DayUtils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import me.BaddCamden.DayUtils.api.DayPhaseChangeEvent;
 import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -12,13 +13,17 @@ public class TimeController {
     private static final long HALF_DAY_TICKS = FULL_DAY_TICKS / 2;
 
     private final JavaPlugin plugin;
+    private final CustomDayScheduler customDayScheduler;
     private DaySettings settings;
     private BukkitTask task;
     private final Map<UUID, Double> trackedTime = new HashMap<>();
+    private final Map<UUID, Boolean> worldDayStates = new HashMap<>();
 
-    public TimeController(JavaPlugin plugin, DaySettings settings) {
+    public TimeController(JavaPlugin plugin, DaySettings settings, DayUtilsApiImpl api) {
         this.plugin = plugin;
         this.settings = settings;
+        this.customDayScheduler = new CustomDayScheduler(plugin, api);
+        api.setScheduler(customDayScheduler);
     }
 
     public void start() {
@@ -31,6 +36,8 @@ public class TimeController {
             task = null;
         }
         trackedTime.clear();
+        worldDayStates.clear();
+        customDayScheduler.resetTimers();
     }
 
     public void updateSettings(DaySettings settings) {
@@ -61,5 +68,23 @@ public class TimeController {
         double nextTime = (currentTime + incrementPerTick) % FULL_DAY_TICKS;
         trackedTime.put(world.getUID(), nextTime);
         world.setTime((long) nextTime);
+        detectPhaseChange(world, isDay, nextTime);
+        customDayScheduler.tickWorld(world);
+    }
+
+    public boolean triggerCustomDay(CustomDayRegistration registration, World world) {
+        return customDayScheduler.triggerNow(registration, world);
+    }
+
+    private void detectPhaseChange(World world, boolean wasDay, double nextTime) {
+        boolean nowDay = nextTime % FULL_DAY_TICKS < HALF_DAY_TICKS;
+        Boolean lastState = worldDayStates.put(world.getUID(), nowDay);
+        boolean previousDayState = lastState != null ? lastState : wasDay;
+
+        if (previousDayState != nowDay) {
+            DayPhaseChangeEvent.Phase phase =
+                    nowDay ? DayPhaseChangeEvent.Phase.DAY : DayPhaseChangeEvent.Phase.NIGHT;
+            plugin.getServer().getPluginManager().callEvent(new DayPhaseChangeEvent(world, phase));
+        }
     }
 }
