@@ -6,7 +6,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class DayUtilsPlugin extends JavaPlugin {
     private DaySettings settings;
-    private DayScheduler scheduler;
+    private TimeController timeController;
     private boolean configModified;
 
     @Override
@@ -21,8 +21,8 @@ public class DayUtilsPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (scheduler != null) {
-            scheduler.stop();
+        if (timeController != null) {
+            timeController.stop();
         }
 
         if (configModified) {
@@ -39,8 +39,8 @@ public class DayUtilsPlugin extends JavaPlugin {
     public void reloadDaySettings() {
         reloadConfig();
         loadSettings();
-        if (scheduler != null) {
-            scheduler.updateSettings(settings);
+        if (timeController != null) {
+            timeController.updateSettings(settings);
         }
     }
 
@@ -62,7 +62,7 @@ public class DayUtilsPlugin extends JavaPlugin {
     }
 
     private void initializeScheduler() {
-        scheduler = new DayScheduler(this, settings);
-        scheduler.start();
+        timeController = new TimeController(this, settings);
+        timeController.start();
     }
 }
