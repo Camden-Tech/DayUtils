@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import me.BaddCamden.DayUtils.api.CustomDayType;
+import me.BaddCamden.DayUtils.api.DayInfoService;
 import me.BaddCamden.DayUtils.api.DayUtilsApi;
 import org.bukkit.World;
 
@@ -18,11 +19,16 @@ class DayUtilsApiImpl implements DayUtilsApi {
     private final Map<String, CustomDayRegistration> registrations = new ConcurrentHashMap<>();
     private volatile Map<String, Long> configuredIntervals = Map.of();
     private CustomDayScheduler scheduler;
+    private DayInfoService dayInfoService;
 
     DayUtilsApiImpl() {}
 
     public void setScheduler(CustomDayScheduler scheduler) {
         this.scheduler = scheduler;
+    }
+
+    public void setDayInfoService(DayInfoService dayInfoService) {
+        this.dayInfoService = dayInfoService;
     }
 
     public void updateConfiguredIntervals(Map<String, Long> configuredIntervals) {
@@ -69,6 +75,11 @@ class DayUtilsApiImpl implements DayUtilsApi {
         Collection<CustomDayType> snapshot = new ArrayList<>();
         registrations.values().forEach(reg -> snapshot.add(reg.type()));
         return Collections.unmodifiableCollection(snapshot);
+    }
+
+    @Override
+    public DayInfoService getDayInfoService() {
+        return dayInfoService;
     }
 
     Collection<CustomDayRegistration> getRegistrations() {
