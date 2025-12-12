@@ -8,12 +8,19 @@ public final class DaySettings {
     private final long nightLengthTicks;
     private final Map<String, Long> customDayTypes;
     private final String reloadPermission;
+    private final String triggerPermission;
 
-    public DaySettings(long dayLengthTicks, long nightLengthTicks, Map<String, Long> customDayTypes, String reloadPermission) {
+    public DaySettings(
+            long dayLengthTicks,
+            long nightLengthTicks,
+            Map<String, Long> customDayTypes,
+            String reloadPermission,
+            String triggerPermission) {
         this.dayLengthTicks = dayLengthTicks;
         this.nightLengthTicks = nightLengthTicks;
         this.customDayTypes = Collections.unmodifiableMap(customDayTypes);
         this.reloadPermission = reloadPermission;
+        this.triggerPermission = triggerPermission;
     }
 
     public long dayLengthTicks() {
@@ -30,5 +37,9 @@ public final class DaySettings {
 
     public String reloadPermission() {
         return reloadPermission;
+    }
+
+    public String triggerPermission() {
+        return triggerPermission;
     }
 }

@@ -46,7 +46,14 @@ public class DaySettingsLoader {
             modified = true;
         }
 
-        DaySettings settings = new DaySettings(dayLength, nightLength, customTypes, reloadPermission);
+        String triggerPermission = config.getString("commands.triggerPermission", "dayutils.trigger");
+        if (!config.contains("commands.triggerPermission")) {
+            config.set("commands.triggerPermission", triggerPermission);
+            modified = true;
+        }
+
+        DaySettings settings =
+                new DaySettings(dayLength, nightLength, customTypes, reloadPermission, triggerPermission);
         return new LoadResult(settings, modified);
     }
 

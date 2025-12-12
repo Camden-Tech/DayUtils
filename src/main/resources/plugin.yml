@@ -6,6 +6,13 @@ api-version: "1.20"
 commands:
   dayutils:
     description: DayUtils administrative commands
-    usage: /dayutils reload
+    usage: /dayutils reload | /dayutils trigger <type> [world]
     permission: dayutils.reload
     permission-message: You do not have permission to run this command.
+permissions:
+  dayutils.reload:
+    description: Reload DayUtils configuration.
+    default: op
+  dayutils.trigger:
+    description: Trigger registered custom day types.
+    default: op
