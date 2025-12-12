@@ -76,6 +76,10 @@ public class TimeController {
         return customDayScheduler.triggerNow(registration, world);
     }
 
+    public CustomDayScheduler getCustomDayScheduler() {
+        return customDayScheduler;
+    }
+
     private void detectPhaseChange(World world, boolean wasDay, double nextTime) {
         boolean nowDay = nextTime % FULL_DAY_TICKS < HALF_DAY_TICKS;
         Boolean lastState = worldDayStates.put(world.getUID(), nowDay);
