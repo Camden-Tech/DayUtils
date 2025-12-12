@@ -56,158 +56,214 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
             return handleTrigger(sender, args);
         }
 
-        sender.sendMessage(ChatColor.YELLOW
-                + "DayUtils usage: /"
-                + label
-                + " reload | /"
-                + label
-                + " trigger <type> [world] | /"
-                + label
-                + " setdaylength <ticks> | /"
-                + label
-                + " setnightlength <ticks> | /"
-                + label
-                + " setspeed <0.1-10> | /"
-                + label
-                + " status [world]");
+        sender.sendMessage(
+                formatMessage(
+                        "messages.usage",
+                        "&eDayUtils usage: /{label} reload | /{label} trigger <type> [world] | /{label} setdaylength <ticks> | /{label} setnightlength <ticks> | /{label} setspeed <0.1-10> | /{label} status [world]",
+                        "label",
+                        label));
         return true;
     }
 
     private boolean handleReload(CommandSender sender) {
         DaySettings settings = plugin.getSettings();
         if (!sender.hasPermission(settings.reloadPermission())) {
-            sender.sendMessage(ChatColor.RED + "You do not have permission to reload DayUtils.");
+            sender.sendMessage(
+                    formatMessage(
+                            "messages.reload.noPermission",
+                            "&cYou do not have permission to reload DayUtils."));
             return true;
         }
 
         plugin.reloadDaySettings();
-        sender.sendMessage(ChatColor.GREEN + "DayUtils configuration reloaded.");
+        sender.sendMessage(
+                formatMessage("messages.reload.success", "&aDayUtils configuration reloaded."));
         return true;
     }
 
     private boolean handleSetDayLength(CommandSender sender, String[] args) {
         DaySettings settings = plugin.getSettings();
         if (!sender.hasPermission(settings.setDayLengthPermission())) {
-            sender.sendMessage(ChatColor.RED + "You do not have permission to set the day length.");
+            sender.sendMessage(
+                    formatMessage(
+                            "messages.setDayLength.noPermission",
+                            "&cYou do not have permission to set the day length."));
             return true;
         }
 
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.YELLOW + "Usage: /dayutils setdaylength <ticks>");
+            sender.sendMessage(
+                    formatMessage(
+                            "messages.setDayLength.usage", "&eUsage: /dayutils setdaylength <ticks>"));
             return true;
         }
 
         Long value = parseLong(args[1]);
         if (value == null) {
-            sender.sendMessage(ChatColor.RED + "Day length must be a number of ticks.");
+            sender.sendMessage(
+                    formatMessage(
+                            "messages.setDayLength.notNumber",
+                            "&cDay length must be a number of ticks."));
             return true;
         }
 
         if (value < MIN_LENGTH_TICKS || value > MAX_LENGTH_TICKS) {
             sender.sendMessage(
-                    ChatColor.RED
-                            + "Day length must be between "
-                            + MIN_LENGTH_TICKS
-                            + " and "
-                            + MAX_LENGTH_TICKS
-                            + " ticks.");
+                    formatMessage(
+                            "messages.setDayLength.outOfBounds",
+                            "&cDay length must be between {min} and {max} ticks.",
+                            "min",
+                            MIN_LENGTH_TICKS,
+                            "max",
+                            MAX_LENGTH_TICKS));
             return true;
         }
 
         plugin.updateDayLength(value);
-        sender.sendMessage(ChatColor.GREEN + "Day length updated to " + value + " ticks.");
+        sender.sendMessage(
+                formatMessage(
+                        "messages.setDayLength.success",
+                        "&aDay length updated to {ticks} ticks.",
+                        "ticks",
+                        value));
         return true;
     }
 
     private boolean handleSetNightLength(CommandSender sender, String[] args) {
         DaySettings settings = plugin.getSettings();
         if (!sender.hasPermission(settings.setNightLengthPermission())) {
-            sender.sendMessage(ChatColor.RED + "You do not have permission to set the night length.");
+            sender.sendMessage(
+                    formatMessage(
+                            "messages.setNightLength.noPermission",
+                            "&cYou do not have permission to set the night length."));
             return true;
         }
 
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.YELLOW + "Usage: /dayutils setnightlength <ticks>");
+            sender.sendMessage(
+                    formatMessage(
+                            "messages.setNightLength.usage", "&eUsage: /dayutils setnightlength <ticks>"));
             return true;
         }
 
         Long value = parseLong(args[1]);
         if (value == null) {
-            sender.sendMessage(ChatColor.RED + "Night length must be a number of ticks.");
+            sender.sendMessage(
+                    formatMessage(
+                            "messages.setNightLength.notNumber",
+                            "&cNight length must be a number of ticks."));
             return true;
         }
 
         if (value < MIN_LENGTH_TICKS || value > MAX_LENGTH_TICKS) {
             sender.sendMessage(
-                    ChatColor.RED
-                            + "Night length must be between "
-                            + MIN_LENGTH_TICKS
-                            + " and "
-                            + MAX_LENGTH_TICKS
-                            + " ticks.");
+                    formatMessage(
+                            "messages.setNightLength.outOfBounds",
+                            "&cNight length must be between {min} and {max} ticks.",
+                            "min",
+                            MIN_LENGTH_TICKS,
+                            "max",
+                            MAX_LENGTH_TICKS));
             return true;
         }
 
         plugin.updateNightLength(value);
-        sender.sendMessage(ChatColor.GREEN + "Night length updated to " + value + " ticks.");
+        sender.sendMessage(
+                formatMessage(
+                        "messages.setNightLength.success",
+                        "&aNight length updated to {ticks} ticks.",
+                        "ticks",
+                        value));
         return true;
     }
 
     private boolean handleSetSpeed(CommandSender sender, String[] args) {
         DaySettings settings = plugin.getSettings();
         if (!sender.hasPermission(settings.setSpeedPermission())) {
-            sender.sendMessage(ChatColor.RED + "You do not have permission to change the day speed.");
+            sender.sendMessage(
+                    formatMessage(
+                            "messages.setSpeed.noPermission",
+                            "&cYou do not have permission to change the day speed."));
             return true;
         }
 
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.YELLOW + "Usage: /dayutils setspeed <multiplier>");
+            sender.sendMessage(
+                    formatMessage(
+                            "messages.setSpeed.usage", "&eUsage: /dayutils setspeed <multiplier>"));
             return true;
         }
 
         Double value = parseDouble(args[1]);
         if (value == null) {
-            sender.sendMessage(ChatColor.RED + "Speed must be a decimal value.");
+            sender.sendMessage(
+                    formatMessage(
+                            "messages.setSpeed.notNumber", "&cSpeed must be a decimal value."));
             return true;
         }
 
         if (value < MIN_SPEED || value > MAX_SPEED) {
             sender.sendMessage(
-                    ChatColor.RED
-                            + "Speed multiplier must be between "
-                            + MIN_SPEED
-                            + " and "
-                            + MAX_SPEED
-                            + ".");
+                    formatMessage(
+                            "messages.setSpeed.outOfBounds",
+                            "&cSpeed multiplier must be between {min} and {max}.",
+                            "min",
+                            MIN_SPEED,
+                            "max",
+                            MAX_SPEED));
             return true;
         }
 
         plugin.updateSpeed(value);
-        sender.sendMessage(ChatColor.GREEN + "Day/night speed multiplier updated to " + value + ".");
+        sender.sendMessage(
+                formatMessage(
+                        "messages.setSpeed.success",
+                        "&aDay/night speed multiplier updated to {multiplier}.",
+                        "multiplier",
+                        value));
         return true;
     }
 
     private boolean handleTrigger(CommandSender sender, String[] args) {
         DaySettings settings = plugin.getSettings();
         if (!sender.hasPermission(settings.triggerPermission())) {
-            sender.sendMessage(ChatColor.RED + "You do not have permission to trigger custom days.");
+            sender.sendMessage(
+                    formatMessage(
+                            "messages.trigger.noPermission",
+                            "&cYou do not have permission to trigger custom days."));
             return true;
         }
 
         String typeId = args[1];
         World world = resolveWorld(sender, args.length >= 3 ? args[2] : null);
         if (world == null) {
-            sender.sendMessage(ChatColor.RED + "Unable to resolve world to trigger the event.");
+            sender.sendMessage(
+                    formatMessage(
+                            "messages.trigger.worldMissing",
+                            "&cUnable to resolve world to trigger the event."));
             return true;
         }
 
         DayUtilsApi api = plugin.getApi();
         boolean triggered = api.triggerCustomDay(typeId, world);
         if (triggered) {
-            sender.sendMessage(ChatColor.GREEN + "Triggered custom day '" + typeId + "' in " + world.getName());
+            sender.sendMessage(
+                    formatMessage(
+                            "messages.trigger.success",
+                            "&aTriggered custom day '{type}' in {world}.",
+                            "type",
+                            typeId,
+                            "world",
+                            world.getName()));
         } else {
             sender.sendMessage(
-                    ChatColor.RED + "Unknown custom day '" + typeId + "'. Available: " + describeRegistered(api));
+                    formatMessage(
+                            "messages.trigger.unknownType",
+                            "&cUnknown custom day '{type}'. Available: {available}",
+                            "type",
+                            typeId,
+                            "available",
+                            describeRegistered(api)));
         }
         return true;
     }
@@ -236,7 +292,9 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
     private boolean handleStatus(CommandSender sender, String[] args) {
         World world = resolveWorld(sender, args.length >= 2 ? args[1] : null);
         if (world == null) {
-            sender.sendMessage(ChatColor.RED + "Unable to resolve world for status.");
+            sender.sendMessage(
+                    formatMessage(
+                            "messages.status.worldMissing", "&cUnable to resolve world for status."));
             return true;
         }
 
@@ -246,37 +304,49 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
         boolean isNight = dayInfoService.isNight(world);
 
         if (active != null) {
-            sender.sendMessage(ChatColor.AQUA
-                    + "Custom day "
-                    + active.displayName()
-                    + " progress: "
-                    + formatPercent(dayInfoService.getFullCycleProgress(world))
-                    + " in "
-                    + world.getName());
+            sender.sendMessage(
+                    formatMessage(
+                            "messages.status.customDay",
+                            "&bCustom day {name} progress: {progress} in {world}",
+                            "name",
+                            active.displayName(),
+                            "progress",
+                            formatPercent(dayInfoService.getFullCycleProgress(world)),
+                            "world",
+                            world.getName()));
             return true;
         }
 
         if (isDay) {
-            sender.sendMessage(ChatColor.GREEN
-                    + "Daytime in "
-                    + world.getName()
-                    + " ("
-                    + formatPercent(dayInfoService.getDayProgress(world))
-                    + " complete).");
+            sender.sendMessage(
+                    formatMessage(
+                            "messages.status.day",
+                            "&aDaytime in {world} ({progress} complete).",
+                            "world",
+                            world.getName(),
+                            "progress",
+                            formatPercent(dayInfoService.getDayProgress(world))));
             return true;
         }
 
         if (isNight) {
-            sender.sendMessage(ChatColor.BLUE
-                    + "Nighttime in "
-                    + world.getName()
-                    + " ("
-                    + formatPercent(dayInfoService.getNightProgress(world))
-                    + " complete).");
+            sender.sendMessage(
+                    formatMessage(
+                            "messages.status.night",
+                            "&9Nighttime in {world} ({progress} complete).",
+                            "world",
+                            world.getName(),
+                            "progress",
+                            formatPercent(dayInfoService.getNightProgress(world))));
             return true;
         }
 
-        sender.sendMessage(ChatColor.YELLOW + "Cycle status unavailable for " + world.getName());
+        sender.sendMessage(
+                formatMessage(
+                        "messages.status.unavailable",
+                        "&eCycle status unavailable for {world}",
+                        "world",
+                        world.getName()));
         return true;
     }
 
@@ -359,5 +429,13 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
         } catch (NumberFormatException ex) {
             return null;
         }
+    }
+
+    private String formatMessage(String path, String defaultValue, Object... replacements) {
+        String raw = plugin.getConfig().getString(path, defaultValue);
+        for (int i = 0; i + 1 < replacements.length; i += 2) {
+            raw = raw.replace("{" + replacements[i] + "}", String.valueOf(replacements[i + 1]));
+        }
+        return ChatColor.translateAlternateColorCodes('&', raw);
     }
 }

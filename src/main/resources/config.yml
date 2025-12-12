@@ -1,9 +1,61 @@
+# Global day and night cycle configuration
+# A vanilla Minecraft day lasts 24000 ticks. DayUtils lets you customise
+# both halves independently.
 day:
-  length: 12000
-  nightLength: 12000
+  length: 12000        # Duration of the daytime portion in ticks
+  nightLength: 12000   # Duration of the nighttime portion in ticks
+  speed: 1.0           # Multiplier applied to the configured lengths
+
+  # Custom day types let you trigger bespoke events on a schedule.
+  # Provide the interval (in ticks) between repeats.
   customTypes:
     # sunrise: 1000
-    # sunset: 1000
+    # bloodmoon: 24000
+
 commands:
   reloadPermission: dayutils.reload
   triggerPermission: dayutils.trigger
+  setDayLengthPermission: dayutils.setdaylength
+  setNightLengthPermission: dayutils.setnightlength
+  setSpeedPermission: dayutils.setspeed
+
+messages:
+  usage: "&eDayUtils usage: /{label} reload | /{label} trigger <type> [world] | /{label} setdaylength <ticks> | /{label} setnightlength <ticks> | /{label} setspeed <0.1-10> | /{label} status [world]"
+
+  reload:
+    noPermission: "&cYou do not have permission to reload DayUtils."
+    success: "&aDayUtils configuration reloaded."
+
+  setDayLength:
+    noPermission: "&cYou do not have permission to set the day length."
+    usage: "&eUsage: /dayutils setdaylength <ticks>"
+    notNumber: "&cDay length must be a number of ticks."
+    outOfBounds: "&cDay length must be between {min} and {max} ticks."
+    success: "&aDay length updated to {ticks} ticks."
+
+  setNightLength:
+    noPermission: "&cYou do not have permission to set the night length."
+    usage: "&eUsage: /dayutils setnightlength <ticks>"
+    notNumber: "&cNight length must be a number of ticks."
+    outOfBounds: "&cNight length must be between {min} and {max} ticks."
+    success: "&aNight length updated to {ticks} ticks."
+
+  setSpeed:
+    noPermission: "&cYou do not have permission to change the day speed."
+    usage: "&eUsage: /dayutils setspeed <multiplier>"
+    notNumber: "&cSpeed must be a decimal value."
+    outOfBounds: "&cSpeed multiplier must be between {min} and {max}."
+    success: "&aDay/night speed multiplier updated to {multiplier}."
+
+  trigger:
+    noPermission: "&cYou do not have permission to trigger custom days."
+    worldMissing: "&cUnable to resolve world to trigger the event."
+    success: "&aTriggered custom day '{type}' in {world}."
+    unknownType: "&cUnknown custom day '{type}'. Available: {available}"
+
+  status:
+    worldMissing: "&cUnable to resolve world for status."
+    customDay: "&bCustom day {name} progress: {progress} in {world}"
+    day: "&aDaytime in {world} ({progress} complete)."
+    night: "&9Nighttime in {world} ({progress} complete)."
+    unavailable: "&eCycle status unavailable for {world}"
