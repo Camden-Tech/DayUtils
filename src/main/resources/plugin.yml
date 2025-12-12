@@ -1,0 +1,11 @@
+name: DayUtils
+version: 1.0
+main: me.BaddCamden.DayUtils.DayUtilsPlugin
+description: Utilities for managing day and night cycles
+api-version: "1.20"
+commands:
+  dayutils:
+    description: DayUtils administrative commands
+    usage: /dayutils reload
+    permission: dayutils.reload
+    permission-message: You do not have permission to run this command.

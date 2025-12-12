@@ -1,0 +1,8 @@
+day:
+  length: 12000
+  nightLength: 12000
+  customTypes:
+    # sunrise: 1000
+    # sunset: 1000
+commands:
+  reloadPermission: dayutils.reload
