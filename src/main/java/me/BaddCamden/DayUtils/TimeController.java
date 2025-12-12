@@ -64,7 +64,9 @@ public class TimeController {
             configuredLength = 1;
         }
 
-        double incrementPerTick = HALF_DAY_TICKS / configuredLength;
+        double speed = Math.max(0.0001D, settings.speedMultiplier());
+        double effectiveLength = configuredLength / speed;
+        double incrementPerTick = HALF_DAY_TICKS / Math.max(1.0D, effectiveLength);
         double nextTime = (currentTime + incrementPerTick) % FULL_DAY_TICKS;
         trackedTime.put(world.getUID(), nextTime);
         world.setTime((long) nextTime);

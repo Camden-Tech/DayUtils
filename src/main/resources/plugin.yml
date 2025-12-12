@@ -6,7 +6,9 @@ api-version: "1.20"
 commands:
   dayutils:
     description: DayUtils administrative commands
-    usage: /dayutils reload | /dayutils trigger <type> [world] | /dayutils status [world]
+    usage: >-
+      /dayutils reload | /dayutils trigger <type> [world] | /dayutils setdaylength <ticks> |
+      /dayutils setnightlength <ticks> | /dayutils setspeed <multiplier> | /dayutils status [world]
     permission: dayutils.reload
     permission-message: You do not have permission to run this command.
 permissions:
@@ -15,4 +17,13 @@ permissions:
     default: op
   dayutils.trigger:
     description: Trigger registered custom day types.
+    default: op
+  dayutils.setdaylength:
+    description: Configure the day length.
+    default: op
+  dayutils.setnightlength:
+    description: Configure the night length.
+    default: op
+  dayutils.setspeed:
+    description: Configure the day/night speed multiplier.
     default: op

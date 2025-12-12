@@ -1,6 +1,9 @@
 package me.BaddCamden.DayUtils;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 import me.BaddCamden.DayUtils.api.CustomDayType;
 import me.BaddCamden.DayUtils.api.DayInfoService;
@@ -10,9 +13,15 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-public class DayUtilsCommand implements CommandExecutor {
+public class DayUtilsCommand implements CommandExecutor, TabCompleter {
+    private static final long MIN_LENGTH_TICKS = 1L;
+    private static final long MAX_LENGTH_TICKS = 240000L;
+    private static final double MIN_SPEED = 0.1D;
+    private static final double MAX_SPEED = 10.0D;
+
     private final DayUtilsPlugin plugin;
     private final DayInfoService dayInfoService;
 
@@ -25,6 +34,18 @@ public class DayUtilsCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0 || args[0].equalsIgnoreCase("status")) {
             return handleStatus(sender, args);
+        }
+
+        if (args.length >= 2 && args[0].equalsIgnoreCase("setdaylength")) {
+            return handleSetDayLength(sender, args);
+        }
+
+        if (args.length >= 2 && args[0].equalsIgnoreCase("setnightlength")) {
+            return handleSetNightLength(sender, args);
+        }
+
+        if (args.length >= 2 && args[0].equalsIgnoreCase("setspeed")) {
+            return handleSetSpeed(sender, args);
         }
 
         if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {
@@ -42,6 +63,12 @@ public class DayUtilsCommand implements CommandExecutor {
                 + label
                 + " trigger <type> [world] | /"
                 + label
+                + " setdaylength <ticks> | /"
+                + label
+                + " setnightlength <ticks> | /"
+                + label
+                + " setspeed <0.1-10> | /"
+                + label
                 + " status [world]");
         return true;
     }
@@ -55,6 +82,108 @@ public class DayUtilsCommand implements CommandExecutor {
 
         plugin.reloadDaySettings();
         sender.sendMessage(ChatColor.GREEN + "DayUtils configuration reloaded.");
+        return true;
+    }
+
+    private boolean handleSetDayLength(CommandSender sender, String[] args) {
+        DaySettings settings = plugin.getSettings();
+        if (!sender.hasPermission(settings.setDayLengthPermission())) {
+            sender.sendMessage(ChatColor.RED + "You do not have permission to set the day length.");
+            return true;
+        }
+
+        if (args.length < 2) {
+            sender.sendMessage(ChatColor.YELLOW + "Usage: /dayutils setdaylength <ticks>");
+            return true;
+        }
+
+        Long value = parseLong(args[1]);
+        if (value == null) {
+            sender.sendMessage(ChatColor.RED + "Day length must be a number of ticks.");
+            return true;
+        }
+
+        if (value < MIN_LENGTH_TICKS || value > MAX_LENGTH_TICKS) {
+            sender.sendMessage(
+                    ChatColor.RED
+                            + "Day length must be between "
+                            + MIN_LENGTH_TICKS
+                            + " and "
+                            + MAX_LENGTH_TICKS
+                            + " ticks.");
+            return true;
+        }
+
+        plugin.updateDayLength(value);
+        sender.sendMessage(ChatColor.GREEN + "Day length updated to " + value + " ticks.");
+        return true;
+    }
+
+    private boolean handleSetNightLength(CommandSender sender, String[] args) {
+        DaySettings settings = plugin.getSettings();
+        if (!sender.hasPermission(settings.setNightLengthPermission())) {
+            sender.sendMessage(ChatColor.RED + "You do not have permission to set the night length.");
+            return true;
+        }
+
+        if (args.length < 2) {
+            sender.sendMessage(ChatColor.YELLOW + "Usage: /dayutils setnightlength <ticks>");
+            return true;
+        }
+
+        Long value = parseLong(args[1]);
+        if (value == null) {
+            sender.sendMessage(ChatColor.RED + "Night length must be a number of ticks.");
+            return true;
+        }
+
+        if (value < MIN_LENGTH_TICKS || value > MAX_LENGTH_TICKS) {
+            sender.sendMessage(
+                    ChatColor.RED
+                            + "Night length must be between "
+                            + MIN_LENGTH_TICKS
+                            + " and "
+                            + MAX_LENGTH_TICKS
+                            + " ticks.");
+            return true;
+        }
+
+        plugin.updateNightLength(value);
+        sender.sendMessage(ChatColor.GREEN + "Night length updated to " + value + " ticks.");
+        return true;
+    }
+
+    private boolean handleSetSpeed(CommandSender sender, String[] args) {
+        DaySettings settings = plugin.getSettings();
+        if (!sender.hasPermission(settings.setSpeedPermission())) {
+            sender.sendMessage(ChatColor.RED + "You do not have permission to change the day speed.");
+            return true;
+        }
+
+        if (args.length < 2) {
+            sender.sendMessage(ChatColor.YELLOW + "Usage: /dayutils setspeed <multiplier>");
+            return true;
+        }
+
+        Double value = parseDouble(args[1]);
+        if (value == null) {
+            sender.sendMessage(ChatColor.RED + "Speed must be a decimal value.");
+            return true;
+        }
+
+        if (value < MIN_SPEED || value > MAX_SPEED) {
+            sender.sendMessage(
+                    ChatColor.RED
+                            + "Speed multiplier must be between "
+                            + MIN_SPEED
+                            + " and "
+                            + MAX_SPEED
+                            + ".");
+            return true;
+        }
+
+        plugin.updateSpeed(value);
+        sender.sendMessage(ChatColor.GREEN + "Day/night speed multiplier updated to " + value + ".");
         return true;
     }
 
@@ -162,5 +291,73 @@ public class DayUtilsCommand implements CommandExecutor {
 
     private String formatPercent(double progress) {
         return String.format("%.1f%%", progress * 100);
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1) {
+            return filterStartingWith(
+                    List.of("status", "reload", "trigger", "setdaylength", "setnightlength", "setspeed"),
+                    args[0]);
+        }
+
+        String subCommand = args[0].toLowerCase(Locale.ROOT);
+        if (args.length == 2) {
+            return switch (subCommand) {
+                case "status" -> worldNames(args[1]);
+                case "trigger" -> filterStartingWith(
+                        plugin.getApi().getRegisteredCustomDayTypes().stream()
+                                .map(CustomDayType::id)
+                                .toList(),
+                        args[1]);
+                case "setdaylength" -> suggestValue(plugin.getSettings().dayLengthTicks(), args[1]);
+                case "setnightlength" -> suggestValue(plugin.getSettings().nightLengthTicks(), args[1]);
+                case "setspeed" -> suggestValue(plugin.getSettings().speedMultiplier(), args[1]);
+                default -> List.of();
+            };
+        }
+
+        if (args.length == 3 && subCommand.equals("trigger")) {
+            return worldNames(args[2]);
+        }
+
+        return List.of();
+    }
+
+    private List<String> filterStartingWith(List<String> options, String prefix) {
+        String lowerPrefix = prefix.toLowerCase(Locale.ROOT);
+        List<String> matches = new ArrayList<>();
+        for (String option : options) {
+            if (option.toLowerCase(Locale.ROOT).startsWith(lowerPrefix)) {
+                matches.add(option);
+            }
+        }
+        return matches;
+    }
+
+    private List<String> worldNames(String prefix) {
+        return filterStartingWith(
+                plugin.getServer().getWorlds().stream().map(World::getName).toList(), prefix);
+    }
+
+    private List<String> suggestValue(double value, String prefix) {
+        String formatted = value % 1 == 0 ? String.valueOf((long) value) : String.valueOf(value);
+        return filterStartingWith(List.of(formatted), prefix);
+    }
+
+    private Long parseLong(String raw) {
+        try {
+            return Long.parseLong(raw);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private Double parseDouble(String raw) {
+        try {
+            return Double.parseDouble(raw);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 }
