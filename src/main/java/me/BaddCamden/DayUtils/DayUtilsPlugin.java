@@ -1,7 +1,6 @@
 package me.BaddCamden.DayUtils;
 
 import java.util.Objects;
-import me.BaddCamden.DayUtils.api.DayInfoService;
 import me.BaddCamden.DayUtils.api.DayUtilsApi;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -10,7 +9,6 @@ public class DayUtilsPlugin extends JavaPlugin {
     private DaySettings settings;
     private DayUtilsApiImpl api;
     private TimeController timeController;
-    private DayInfoService dayInfoService;
     private boolean configModified;
 
     @Override
@@ -19,10 +17,9 @@ public class DayUtilsPlugin extends JavaPlugin {
         loadSettings();
         api = new DayUtilsApiImpl();
         api.updateConfiguredIntervals(settings.customDayTypes());
-        initializeScheduler();
-        initializeDayInfoService();
         registerListeners();
         registerCommands();
+        initializeScheduler();
         getLogger().info("DayUtils enabled");
     }
 
@@ -47,10 +44,6 @@ public class DayUtilsPlugin extends JavaPlugin {
         return api;
     }
 
-    public DayInfoService getDayInfoService() {
-        return dayInfoService;
-    }
-
     public void reloadDaySettings() {
         reloadConfig();
         loadSettings();
@@ -69,21 +62,16 @@ public class DayUtilsPlugin extends JavaPlugin {
 
     private void registerListeners() {
         PluginManager pluginManager = getServer().getPluginManager();
-        pluginManager.registerEvents(new DayCycleListener(this::getSettings, dayInfoService), this);
+        pluginManager.registerEvents(new DayCycleListener(this::getSettings), this);
     }
 
     private void registerCommands() {
         Objects.requireNonNull(getCommand("dayutils"), "dayutils command must be defined in plugin.yml")
-                .setExecutor(new DayUtilsCommand(this, dayInfoService));
+                .setExecutor(new DayUtilsCommand(this));
     }
 
     private void initializeScheduler() {
         timeController = new TimeController(this, settings, api);
         timeController.start();
-    }
-
-    private void initializeDayInfoService() {
-        dayInfoService = new DayInfoServiceImpl(timeController.getCustomDayScheduler());
-        api.setDayInfoService(dayInfoService);
     }
 }

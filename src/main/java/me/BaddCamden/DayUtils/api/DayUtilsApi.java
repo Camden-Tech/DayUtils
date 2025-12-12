@@ -2,7 +2,6 @@ package me.BaddCamden.DayUtils.api;
 
 import java.util.Collection;
 import org.bukkit.World;
-import me.BaddCamden.DayUtils.api.DayInfoService;
 
 /**
  * Entry point exposed to hook plugins that want to schedule or trigger custom day segments.
@@ -37,9 +36,4 @@ public interface DayUtilsApi {
      * Returns a snapshot of the currently registered custom day types.
      */
     Collection<CustomDayType> getRegisteredCustomDayTypes();
-
-    /**
-     * Returns a service with information about the current day cycle and custom day activity.
-     */
-    DayInfoService getDayInfoService();
 }

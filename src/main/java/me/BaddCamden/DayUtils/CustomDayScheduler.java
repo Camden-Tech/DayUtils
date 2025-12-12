@@ -17,7 +17,6 @@ class CustomDayScheduler {
     private final JavaPlugin plugin;
     private final DayUtilsApiImpl api;
     private final Map<java.util.UUID, Map<String, Long>> timers = new HashMap<>();
-    private final Map<java.util.UUID, ActiveCustomDay> activeCustomDays = new HashMap<>();
 
     CustomDayScheduler(JavaPlugin plugin, DayUtilsApiImpl api) {
         this.plugin = plugin;
@@ -54,7 +53,6 @@ class CustomDayScheduler {
         plugin.getServer()
                 .getScheduler()
                 .runTaskLater(plugin, () -> endCustomDay(type, world), duration);
-        activeCustomDays.put(world.getUID(), new ActiveCustomDay(type, world.getFullTime(), duration));
 
         for (Player player : world.getPlayers()) {
             type.effects().forEach(player::addPotionEffect);
@@ -68,17 +66,9 @@ class CustomDayScheduler {
         CustomDayContext context = new CustomDayContext(plugin, world, type);
         type.onEnd(context);
         Bukkit.getPluginManager().callEvent(new CustomDayEvent(world, type, CustomDayEvent.Phase.END));
-        activeCustomDays.computeIfPresent(world.getUID(), (id, active) -> active.type().equals(type) ? null : active);
     }
 
     void resetTimers() {
         timers.clear();
-        activeCustomDays.clear();
-    }
-
-    ActiveCustomDay getActiveCustomDay(World world) {
-        return activeCustomDays.get(world.getUID());
     }
 }
-
-record ActiveCustomDay(CustomDayType type, long startTick, long durationTicks) {}
