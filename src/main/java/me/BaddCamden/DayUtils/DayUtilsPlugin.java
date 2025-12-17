@@ -71,9 +71,12 @@ public class DayUtilsPlugin extends JavaPlugin {
 
     private void registerCommands() {
         DayUtilsCommand commandHandler = new DayUtilsCommand(this, dayInfoService);
-        Objects.requireNonNull(getCommand("dayutils"), "dayutils command must be defined in plugin.yml")
-                .setExecutor(commandHandler)
-                .setTabCompleter(commandHandler);
+        var dayUtilsCommand =
+                Objects.requireNonNull(
+                        getCommand("dayutils"), "dayutils command must be defined in plugin.yml");
+
+        dayUtilsCommand.setExecutor(commandHandler);
+        dayUtilsCommand.setTabCompleter(commandHandler);
     }
 
     private void initializeScheduler() {
