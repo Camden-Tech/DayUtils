@@ -9,6 +9,7 @@ import me.BaddCamden.DayUtils.config.DaySettings;
 import me.BaddCamden.DayUtils.config.DayUtilsConfiguration;
 import me.BaddCamden.DayUtils.event.CustomDayEvent;
 import me.BaddCamden.DayUtils.event.TimeTickEvent;
+import me.BaddCamden.DayUtils.integration.SessionLibraryHook;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
 import org.bukkit.World;
@@ -24,10 +25,12 @@ public class DayCycleManager {
     private BukkitTask tickTask;
     private DayUtilsConfiguration configuration;
     private final Map<UUID, WorldCycleState> worldStates = new HashMap<>();
+    private final SessionLibraryHook sessionLibraryHook;
 
     public DayCycleManager(Plugin plugin, DayUtilsConfiguration configuration) {
         this.plugin = plugin;
         this.configuration = configuration;
+        this.sessionLibraryHook = new SessionLibraryHook(plugin);
     }
 
     public void start() {
@@ -44,6 +47,7 @@ public class DayCycleManager {
             tickTask.cancel();
             tickTask = null;
         }
+        sessionLibraryHook.resetResolution();
         worldStates.values().forEach(WorldCycleState::restoreDefaults);
         worldStates.clear();
     }
@@ -80,6 +84,9 @@ public class DayCycleManager {
     }
 
     private void tick() {
+        if (!sessionLibraryHook.shouldAdvanceTime()) {
+            return;
+        }
         for (World world : Bukkit.getWorlds()) {
             worldStates.computeIfAbsent(world.getUID(), id -> new WorldCycleState(world, configuration.getDaySettings()));
             WorldCycleState state = worldStates.get(world.getUID());
