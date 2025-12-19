@@ -3,10 +3,12 @@ package me.BaddCamden.DayUtils.command;
 import java.util.Locale;
 import java.util.Map;
 import me.BaddCamden.DayUtils.DayUtilsPlugin;
+import me.BaddCamden.DayUtils.api.DayStatus;
 import me.BaddCamden.DayUtils.config.DayUtilsConfiguration;
 import me.BaddCamden.DayUtils.config.MessageSettings;
 import me.BaddCamden.DayUtils.config.CustomDayType;
 import me.BaddCamden.DayUtils.config.CommandSettings;
+import me.BaddCamden.DayUtils.config.DaySettings;
 import me.BaddCamden.DayUtils.cycle.DayCycleManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -23,6 +25,11 @@ import org.jetbrains.annotations.Nullable;
  * Handles the /dayutils command and subcommands.
  */
 public class DayUtilsCommand implements CommandExecutor, TabCompleter {
+
+    private static final long MIN_LENGTH_TICKS = 20L;
+    private static final long MAX_LENGTH_TICKS = 240000L;
+    private static final double MIN_SPEED = 0.1D;
+    private static final double MAX_SPEED = 10.0D;
 
     private final DayUtilsPlugin plugin;
 
@@ -49,154 +56,204 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
                     sender.sendMessage(colour(messages.getReload().noPermission()));
                     return true;
                 }
-                plugin.reloadConfigurationModel();
-                sender.sendMessage(colour(messages.getReload().success()));
-                return true;
+                return handleReload(sender, messages);
             }
             case "trigger" -> {
-                if (!sender.hasPermission(permissions.getTriggerPermission())) {
-                    sender.sendMessage(colour(messages.getTrigger().noPermission()));
-                    return true;
-                }
-                if (args.length < 2) {
-                    sender.sendMessage(colour(messages.getUsage().replace("{label}", label)));
-                    return true;
-                }
-                String type = args[1].toLowerCase(Locale.ROOT);
-                World world = resolveWorld(sender, args.length > 2 ? args[2] : null);
-                if (world == null) {
-                    sender.sendMessage(colour(messages.getTrigger().worldMissing()));
-                    return true;
-                }
-                if (!manager.getConfiguration().getDaySettings().getCustomTypes().containsKey(type)) {
-                    String available = String.join(", ",
-                        manager.getConfiguration().getDaySettings().getCustomTypes().keySet());
-                    sender.sendMessage(colour(messages.getTrigger().unknownType()
-                        .replace("{type}", type)
-                        .replace("{available}", available)));
-                    return true;
-                }
-                manager.triggerCustomDay(world, type);
-                sender.sendMessage(colour(messages.getTrigger().success()
-                    .replace("{type}", type)
-                    .replace("{world}", world.getName())));
-                return true;
+                return handleTrigger(sender, label, args, permissions, messages, manager);
             }
             case "setdaylength" -> {
-                if (!sender.hasPermission(permissions.getSetDayLengthPermission())) {
-                    sender.sendMessage(colour(messages.getSetDayLength().noPermission()));
-                    return true;
-                }
-                if (args.length < 2) {
-                    sender.sendMessage(colour(messages.getSetDayLength().usage()));
-                    return true;
-                }
-                Long value = parseLong(args[1]);
-                if (value == null) {
-                    sender.sendMessage(colour(messages.getSetDayLength().notNumber()));
-                    return true;
-                }
-                if (!validateBounds(value, 20, 240000)) {
-                    sender.sendMessage(colour(messages.getSetDayLength().outOfBounds()
-                        .replace("{min}", "20")
-                        .replace("{max}", "240000")));
-                    return true;
-                }
-                plugin.getConfig().set("day.length", value);
-                plugin.saveConfig();
-                plugin.reloadConfigurationModel();
-                sender.sendMessage(colour(messages.getSetDayLength().success()
-                    .replace("{ticks}", value.toString())));
-                return true;
+                return handleSetDayLength(sender, args, permissions, messages, configuration);
             }
             case "setnightlength" -> {
-                if (!sender.hasPermission(permissions.getSetNightLengthPermission())) {
-                    sender.sendMessage(colour(messages.getSetNightLength().noPermission()));
-                    return true;
-                }
-                if (args.length < 2) {
-                    sender.sendMessage(colour(messages.getSetNightLength().usage()));
-                    return true;
-                }
-                Long value = parseLong(args[1]);
-                if (value == null) {
-                    sender.sendMessage(colour(messages.getSetNightLength().notNumber()));
-                    return true;
-                }
-                if (!validateBounds(value, 20, 240000)) {
-                    sender.sendMessage(colour(messages.getSetNightLength().outOfBounds()
-                        .replace("{min}", "20")
-                        .replace("{max}", "240000")));
-                    return true;
-                }
-                plugin.getConfig().set("day.nightLength", value);
-                plugin.saveConfig();
-                plugin.reloadConfigurationModel();
-                sender.sendMessage(colour(messages.getSetNightLength().success()
-                    .replace("{ticks}", value.toString())));
-                return true;
+                return handleSetNightLength(sender, args, permissions, messages, configuration);
             }
             case "setspeed" -> {
-                if (!sender.hasPermission(permissions.getSetSpeedPermission())) {
-                    sender.sendMessage(colour(messages.getSetSpeed().noPermission()));
-                    return true;
-                }
-                if (args.length < 2) {
-                    sender.sendMessage(colour(messages.getSetSpeed().usage()));
-                    return true;
-                }
-                Double multiplier = parseDouble(args[1]);
-                if (multiplier == null) {
-                    sender.sendMessage(colour(messages.getSetSpeed().notNumber()));
-                    return true;
-                }
-                if (multiplier < 0.1d || multiplier > 10.0d) {
-                    sender.sendMessage(colour(messages.getSetSpeed().outOfBounds()
-                        .replace("{min}", "0.1")
-                        .replace("{max}", "10")));
-                    return true;
-                }
-                plugin.getConfig().set("day.speed", multiplier);
-                plugin.saveConfig();
-                plugin.reloadConfigurationModel();
-                sender.sendMessage(colour(messages.getSetSpeed().success()
-                    .replace("{multiplier}", multiplier.toString())));
-                return true;
+                return handleSetSpeed(sender, args, permissions, messages, configuration);
             }
             case "status" -> {
-                World world = resolveWorld(sender, args.length > 1 ? args[1] : null);
-                if (world == null) {
-                    sender.sendMessage(colour(messages.getStatus().worldMissing()));
-                    return true;
-                }
-                var status = plugin.getApi().status(world);
-                if (status == null) {
-                    sender.sendMessage(colour(messages.getStatus().unavailable()
-                        .replace("{world}", world.getName())));
-                    return true;
-                }
-                sender.sendMessage(colour(status.isDay()
-                    ? messages.getStatus().day().replace("{world}", world.getName())
-                    .replace("{progress}", percent(status.getDayPercent()))
-                    : messages.getStatus().night().replace("{world}", world.getName())
-                    .replace("{progress}", percent(status.getNightPercent()))));
-                for (Map.Entry<String, Double> entry : status.getCustomPercent().entrySet()) {
-                    CustomDayType type = manager.getConfiguration().getDaySettings().getCustomTypes().get(entry.getKey());
-                    if (type == null) {
-                        continue;
-                    }
-                    sender.sendMessage(colour(messages.getStatus().customDay()
-                        .replace("{name}", type.getName())
-                        .replace("{progress}", percent(entry.getValue()))
-                        .replace("{world}", world.getName())));
-                }
-                return true;
+                return handleStatus(sender, args, messages, manager);
             }
             default -> {
                 sender.sendMessage(colour(messages.getUsage().replace("{label}", label)));
                 return true;
             }
         }
+    }
+
+    private boolean handleReload(CommandSender sender, MessageSettings messages) {
+        CommandSettings permissions = plugin.getConfigurationModel().getCommandSettings();
+        if (!sender.hasPermission(permissions.getReloadPermission())) {
+            sender.sendMessage(colour(messages.getReload().noPermission()));
+            return true;
+        }
+        plugin.reloadConfigurationModel();
+        sender.sendMessage(colour(messages.getReload().success()));
+        return true;
+    }
+
+    private boolean handleTrigger(CommandSender sender, String label, String[] args, CommandSettings permissions,
+                                  MessageSettings messages, DayCycleManager manager) {
+        if (!sender.hasPermission(permissions.getTriggerPermission())) {
+            sender.sendMessage(colour(messages.getTrigger().noPermission()));
+            return true;
+        }
+        if (args.length < 2) {
+            sender.sendMessage(colour(messages.getUsage().replace("{label}", label)));
+            return true;
+        }
+        String type = args[1].toLowerCase(Locale.ROOT);
+        World world = resolveWorld(sender, args.length > 2 ? args[2] : null);
+        if (world == null) {
+            sender.sendMessage(colour(messages.getTrigger().worldMissing()));
+            return true;
+        }
+        if (!manager.getConfiguration().getDaySettings().getCustomTypes().containsKey(type)) {
+            String available = String.join(", ",
+                manager.getConfiguration().getDaySettings().getCustomTypes().keySet());
+            sender.sendMessage(colour(messages.getTrigger().unknownType()
+                .replace("{type}", type)
+                .replace("{available}", available)));
+            return true;
+        }
+        manager.triggerCustomDay(world, type);
+        sender.sendMessage(colour(messages.getTrigger().success()
+            .replace("{type}", type)
+            .replace("{world}", world.getName())));
+        return true;
+    }
+
+    private boolean handleSetDayLength(CommandSender sender, String[] args, CommandSettings permissions,
+                                       MessageSettings messages, DayUtilsConfiguration configuration) {
+        if (!sender.hasPermission(permissions.getSetDayLengthPermission())) {
+            sender.sendMessage(colour(messages.getSetDayLength().noPermission()));
+            return true;
+        }
+        if (args.length < 2) {
+            sender.sendMessage(colour(messages.getSetDayLength().usage()));
+            return true;
+        }
+        Long value = parseLong(args[1]);
+        if (value == null) {
+            sender.sendMessage(colour(messages.getSetDayLength().notNumber()));
+            return true;
+        }
+        if (!validateBounds(value, MIN_LENGTH_TICKS, MAX_LENGTH_TICKS)) {
+            sender.sendMessage(colour(messages.getSetDayLength().outOfBounds()
+                .replace("{min}", String.valueOf(MIN_LENGTH_TICKS))
+                .replace("{max}", String.valueOf(MAX_LENGTH_TICKS))));
+            return true;
+        }
+
+        DaySettings current = configuration.getDaySettings();
+        DaySettings updated = new DaySettings(value, current.getNightLength(), current.getSpeedMultiplier(),
+            current.getCustomTypes());
+        plugin.getConfig().set("day.length", value);
+        plugin.updateDaySettings(updated);
+
+        sender.sendMessage(colour(messages.getSetDayLength().success()
+            .replace("{ticks}", value.toString())));
+        return true;
+    }
+
+    private boolean handleSetNightLength(CommandSender sender, String[] args, CommandSettings permissions,
+                                         MessageSettings messages, DayUtilsConfiguration configuration) {
+        if (!sender.hasPermission(permissions.getSetNightLengthPermission())) {
+            sender.sendMessage(colour(messages.getSetNightLength().noPermission()));
+            return true;
+        }
+        if (args.length < 2) {
+            sender.sendMessage(colour(messages.getSetNightLength().usage()));
+            return true;
+        }
+        Long value = parseLong(args[1]);
+        if (value == null) {
+            sender.sendMessage(colour(messages.getSetNightLength().notNumber()));
+            return true;
+        }
+        if (!validateBounds(value, MIN_LENGTH_TICKS, MAX_LENGTH_TICKS)) {
+            sender.sendMessage(colour(messages.getSetNightLength().outOfBounds()
+                .replace("{min}", String.valueOf(MIN_LENGTH_TICKS))
+                .replace("{max}", String.valueOf(MAX_LENGTH_TICKS))));
+            return true;
+        }
+
+        DaySettings current = configuration.getDaySettings();
+        DaySettings updated = new DaySettings(current.getDayLength(), value, current.getSpeedMultiplier(),
+            current.getCustomTypes());
+        plugin.getConfig().set("day.nightLength", value);
+        plugin.updateDaySettings(updated);
+
+        sender.sendMessage(colour(messages.getSetNightLength().success()
+            .replace("{ticks}", value.toString())));
+        return true;
+    }
+
+    private boolean handleSetSpeed(CommandSender sender, String[] args, CommandSettings permissions,
+                                   MessageSettings messages, DayUtilsConfiguration configuration) {
+        if (!sender.hasPermission(permissions.getSetSpeedPermission())) {
+            sender.sendMessage(colour(messages.getSetSpeed().noPermission()));
+            return true;
+        }
+        if (args.length < 2) {
+            sender.sendMessage(colour(messages.getSetSpeed().usage()));
+            return true;
+        }
+        Double multiplier = parseDouble(args[1]);
+        if (multiplier == null) {
+            sender.sendMessage(colour(messages.getSetSpeed().notNumber()));
+            return true;
+        }
+        if (multiplier < MIN_SPEED || multiplier > MAX_SPEED) {
+            sender.sendMessage(colour(messages.getSetSpeed().outOfBounds()
+                .replace("{min}", String.valueOf(MIN_SPEED))
+                .replace("{max}", String.valueOf(MAX_SPEED))));
+            return true;
+        }
+
+        DaySettings current = configuration.getDaySettings();
+        DaySettings updated = new DaySettings(current.getDayLength(), current.getNightLength(), multiplier,
+            current.getCustomTypes());
+        plugin.getConfig().set("day.speed", multiplier);
+        plugin.updateDaySettings(updated);
+
+        sender.sendMessage(colour(messages.getSetSpeed().success()
+            .replace("{multiplier}", multiplier.toString())));
+        return true;
+    }
+
+    private boolean handleStatus(CommandSender sender, String[] args, MessageSettings messages,
+                                 DayCycleManager manager) {
+        World world = resolveWorld(sender, args.length > 1 ? args[1] : null);
+        if (world == null) {
+            sender.sendMessage(colour(messages.getStatus().worldMissing()));
+            return true;
+        }
+
+        DayStatus status = plugin.getApi().status(world);
+        if (status == null) {
+            sender.sendMessage(colour(messages.getStatus().unavailable()
+                .replace("{world}", world.getName())));
+            return true;
+        }
+
+        sender.sendMessage(colour(status.isDay()
+            ? messages.getStatus().day().replace("{world}", world.getName())
+            .replace("{progress}", percent(status.getDayPercent()))
+            : messages.getStatus().night().replace("{world}", world.getName())
+            .replace("{progress}", percent(status.getNightPercent()))));
+
+        for (Map.Entry<String, Double> entry : status.getCustomPercent().entrySet()) {
+            CustomDayType type = manager.getConfiguration().getDaySettings().getCustomTypes().get(entry.getKey());
+            if (type == null) {
+                continue;
+            }
+            sender.sendMessage(colour(messages.getStatus().customDay()
+                .replace("{name}", type.getName())
+                .replace("{progress}", percent(entry.getValue()))
+                .replace("{world}", world.getName())));
+        }
+
+        return true;
     }
 
     @Override
