@@ -3,11 +3,14 @@ package me.BaddCamden.DayUtils;
 import me.BaddCamden.DayUtils.api.DayUtilsAPI;
 import me.BaddCamden.DayUtils.command.DayUtilsCommand;
 import me.BaddCamden.DayUtils.config.DaySettings;
+import me.BaddCamden.DayUtils.config.ConfigLoader;
 import me.BaddCamden.DayUtils.config.DayUtilsConfiguration;
 import me.BaddCamden.DayUtils.cycle.DayCycleManager;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class DayUtilsPlugin extends JavaPlugin {
+    private ConfigLoader configLoader;
     private DayUtilsConfiguration configurationModel;
     private DayCycleManager cycleManager;
     private DayUtilsAPI api;
@@ -16,6 +19,7 @@ public class DayUtilsPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        this.configLoader = new ConfigLoader(this);
         reloadConfigurationModel();
 
         this.api = DayUtilsAPI.bootstrap(() -> cycleManager);
@@ -29,7 +33,11 @@ public class DayUtilsPlugin extends JavaPlugin {
     public void reloadConfigurationModel() {
         persistConfigIfDirty();
         reloadConfig();
-        this.configurationModel = DayUtilsConfiguration.fromConfig(getConfig());
+        ConfigLoader.LoadResult result = configLoader.load();
+        this.configurationModel = result.configuration();
+        if (result.modified()) {
+            saveConfig();
+        }
         restartCycleManager();
     }
 
@@ -49,6 +57,7 @@ public class DayUtilsPlugin extends JavaPlugin {
         } else {
             this.cycleManager.updateConfiguration(configurationModel);
         }
+        syncConfigWith(daySettings);
         markConfigDirty();
     }
 
@@ -74,6 +83,17 @@ public class DayUtilsPlugin extends JavaPlugin {
         }
         this.cycleManager = new DayCycleManager(this, configurationModel);
         this.cycleManager.start();
+    }
+
+    private void syncConfigWith(DaySettings daySettings) {
+        getConfig().set("day.length", daySettings.getDayLength());
+        getConfig().set("day.nightLength", daySettings.getNightLength());
+        getConfig().set("day.speed", daySettings.getSpeedMultiplier());
+
+        getConfig().set("day.customTypes", null);
+        ConfigurationSection section = getConfig().createSection("day.customTypes");
+        daySettings.getCustomTypes().forEach((key, type) ->
+            section.set(type.getName(), type.getIntervalTicks()));
     }
 
     private void persistConfigIfDirty() {
