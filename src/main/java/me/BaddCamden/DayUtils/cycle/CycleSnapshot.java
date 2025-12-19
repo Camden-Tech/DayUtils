@@ -18,9 +18,11 @@ public class CycleSnapshot {
     private final double cyclePercent;
     private final Map<String, Double> customDayPercent;
     private final DaySettings settings;
+    private final long nightsPassed;
 
     public CycleSnapshot(World world, boolean day, boolean night, double dayPercent, double nightPercent,
-                         double cyclePercent, Map<String, Double> customDayPercent, DaySettings settings) {
+                         double cyclePercent, Map<String, Double> customDayPercent, DaySettings settings,
+                         long nightsPassed) {
         this.world = world;
         this.day = day;
         this.night = night;
@@ -29,6 +31,7 @@ public class CycleSnapshot {
         this.cyclePercent = cyclePercent;
         this.customDayPercent = Collections.unmodifiableMap(new HashMap<>(customDayPercent));
         this.settings = settings;
+        this.nightsPassed = nightsPassed;
     }
 
     public World world() {
@@ -61,5 +64,9 @@ public class CycleSnapshot {
 
     public DaySettings getSettings() {
         return settings;
+    }
+
+    public long getNightsPassed() {
+        return nightsPassed;
     }
 }

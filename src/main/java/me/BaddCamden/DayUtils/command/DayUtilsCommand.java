@@ -69,6 +69,9 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
             case "status" -> {
                 return handleStatus(sender, args, messages, manager);
             }
+            case "setnightspassed" -> {
+                return handleSetNightsPassed(sender, args, permissions, messages, manager);
+            }
             default -> {
                 sender.sendMessage(colour(messages.getUsage().replace("{label}", label)));
                 return true;
@@ -214,6 +217,39 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    private boolean handleSetNightsPassed(CommandSender sender, String[] args, CommandSettings permissions,
+                                          MessageSettings messages, DayCycleManager manager) {
+        if (!sender.hasPermission(permissions.getSetNightsPassedPermission())) {
+            sender.sendMessage(colour(messages.getSetNightsPassed().noPermission()));
+            return true;
+        }
+        if (args.length < 2) {
+            sender.sendMessage(colour(messages.getSetNightsPassed().usage()));
+            return true;
+        }
+        Long value = parseLong(args[1]);
+        if (value == null) {
+            sender.sendMessage(colour(messages.getSetNightsPassed().notNumber()));
+            return true;
+        }
+        if (value < 0) {
+            sender.sendMessage(colour(messages.getSetNightsPassed().outOfBounds()));
+            return true;
+        }
+
+        World world = resolveWorld(sender, args.length > 2 ? args[2] : null);
+        if (world == null) {
+            sender.sendMessage(colour(messages.getSetNightsPassed().worldMissing()));
+            return true;
+        }
+
+        manager.setNightsPassed(world, value);
+        sender.sendMessage(colour(messages.getSetNightsPassed().success()
+            .replace("{count}", value.toString())
+            .replace("{world}", world.getName())));
+        return true;
+    }
+
     private boolean handleStatus(CommandSender sender, String[] args, MessageSettings messages,
                                  DayCycleManager manager) {
         World world = resolveWorld(sender, args.length > 1 ? args[1] : null);
@@ -229,6 +265,9 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        sender.sendMessage(colour(messages.getStatus().nightsPassed()
+            .replace("{world}", world.getName())
+            .replace("{count}", String.valueOf(status.getNightsPassed()))));
         sender.sendMessage(colour(status.isDay()
             ? messages.getStatus().day().replace("{world}", world.getName())
             .replace("{progress}", percent(status.getDayPercent()))
@@ -253,12 +292,16 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
     public @Nullable java.util.List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                                           @NotNull String alias, @NotNull String[] args) {
         if (args.length == 1) {
-            return java.util.List.of("reload", "trigger", "setdaylength", "setnightlength", "setspeed", "status");
+            return java.util.List.of("reload", "trigger", "setdaylength", "setnightlength", "setspeed",
+                "setnightspassed", "status");
         }
         if (args.length == 2 && args[0].equalsIgnoreCase("trigger")) {
             return java.util.List.copyOf(plugin.getConfigurationModel().getDaySettings().getCustomTypes().keySet());
         }
         if (args.length == 2 && args[0].equalsIgnoreCase("status")) {
+            return Bukkit.getWorlds().stream().map(World::getName).toList();
+        }
+        if (args.length == 3 && args[0].equalsIgnoreCase("setnightspassed")) {
             return Bukkit.getWorlds().stream().map(World::getName).toList();
         }
         return java.util.Collections.emptyList();

@@ -21,6 +21,7 @@
  *
  * <p>Event listeners can subscribe to {@link me.BaddCamden.DayUtils.api.event.TimeTickEvent},
  * {@link me.BaddCamden.DayUtils.api.event.DayPhaseChangeEvent}, or
- * {@link me.BaddCamden.DayUtils.api.event.CustomDayTriggerEvent} to respond to cycle updates.</p>
+ * {@link me.BaddCamden.DayUtils.api.event.CustomDayTriggerEvent} to respond to cycle updates. Both the API and events
+ * expose the number of nights passed for each world so hooks can track session progression.</p>
  */
 package me.BaddCamden.DayUtils.api;

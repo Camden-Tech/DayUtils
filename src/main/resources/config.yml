@@ -18,9 +18,10 @@ commands:
   setDayLengthPermission: dayutils.setdaylength
   setNightLengthPermission: dayutils.setnightlength
   setSpeedPermission: dayutils.setspeed
+  setNightsPassedPermission: dayutils.setnightspassed
 
 messages:
-  usage: "&eDayUtils usage: /{label} reload | /{label} trigger <type> [world] | /{label} setdaylength <ticks> | /{label} setnightlength <ticks> | /{label} setspeed <0.1-10> | /{label} status [world]"
+  usage: "&eDayUtils usage: /{label} reload | /{label} trigger <type> [world] | /{label} setdaylength <ticks> | /{label} setnightlength <ticks> | /{label} setspeed <0.1-10> | /{label} setnightspassed <count> [world] | /{label} status [world]"
 
   reload:
     noPermission: "&cYou do not have permission to reload DayUtils."
@@ -47,6 +48,14 @@ messages:
     outOfBounds: "&cSpeed multiplier must be between {min} and {max}."
     success: "&aDay/night speed multiplier updated to {multiplier}."
 
+  setNightsPassed:
+    noPermission: "&cYou do not have permission to change nights passed."
+    usage: "&eUsage: /dayutils setnightspassed <count> [world]"
+    notNumber: "&cNights passed must be a whole number."
+    outOfBounds: "&cNights passed cannot be negative."
+    worldMissing: "&cUnable to resolve world to set nights."
+    success: "&aSet nights passed in {world} to {count}."
+
   trigger:
     noPermission: "&cYou do not have permission to trigger custom days."
     worldMissing: "&cUnable to resolve world to trigger the event."
@@ -58,4 +67,5 @@ messages:
     customDay: "&bCustom day {name} progress: {progress} in {world}"
     day: "&aDaytime in {world} ({progress} complete)."
     night: "&9Nighttime in {world} ({progress} complete)."
+    nightsPassed: "&7Nights passed in {world}: {count}"
     unavailable: "&eCycle status unavailable for {world}"

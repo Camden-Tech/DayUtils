@@ -14,9 +14,10 @@ public class DayStatus {
     private final double cyclePercent;
     private final Map<String, Double> customPercent;
     private final DaySettings settings;
+    private final long nightsPassed;
 
     public DayStatus(boolean day, boolean night, double dayPercent, double nightPercent, double cyclePercent,
-                     Map<String, Double> customPercent, DaySettings settings) {
+                     Map<String, Double> customPercent, DaySettings settings, long nightsPassed) {
         this.day = day;
         this.night = night;
         this.dayPercent = dayPercent;
@@ -24,6 +25,7 @@ public class DayStatus {
         this.cyclePercent = cyclePercent;
         this.customPercent = customPercent;
         this.settings = settings;
+        this.nightsPassed = nightsPassed;
     }
 
     public boolean isDay() {
@@ -52,5 +54,9 @@ public class DayStatus {
 
     public DaySettings getSettings() {
         return settings;
+    }
+
+    public long getNightsPassed() {
+        return nightsPassed;
     }
 }

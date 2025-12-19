@@ -70,6 +70,11 @@ public class DayUtilsApi {
         return status.getCustomPercent().get(type.toLowerCase(Locale.ROOT));
     }
 
+    public Long getNightsPassed(World world) {
+        DayStatus status = status(world);
+        return status != null ? status.getNightsPassed() : null;
+    }
+
     public DaySettings getSettings() {
         DayCycleManager manager = cycleManagerSupplier.get();
         return manager.getConfiguration().getDaySettings();
@@ -92,7 +97,7 @@ public class DayUtilsApi {
         }
         return new DayStatus(snapshot.isDay(), snapshot.isNight(), snapshot.getDayPercent(),
             snapshot.getNightPercent(), snapshot.getCyclePercent(), snapshot.getCustomDayPercent(),
-            snapshot.getSettings());
+            snapshot.getSettings(), snapshot.getNightsPassed());
     }
 
     public Map<UUID, DayStatus> allStatuses() {
@@ -102,7 +107,7 @@ public class DayUtilsApi {
                 CycleSnapshot snapshot = entry.getValue();
                 return new DayStatus(snapshot.isDay(), snapshot.isNight(), snapshot.getDayPercent(),
                     snapshot.getNightPercent(), snapshot.getCyclePercent(), snapshot.getCustomDayPercent(),
-                    snapshot.getSettings());
+                    snapshot.getSettings(), snapshot.getNightsPassed());
             }));
     }
 
