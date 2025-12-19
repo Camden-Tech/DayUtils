@@ -22,17 +22,10 @@ Hook plugins can depend on DayUtils and request the API via Bukkit services:
 DayUtilsApi api = getServer().getServicesManager()
         .load(DayUtilsApi.class);
 
-// Register a custom day type using the interval declared in config.yml (day.customTypes.my-event)
-api.registerCustomDayType(new CustomDayType("my-event", "My Event"));
+// Trigger a custom day immediately using a configured type id
+api.triggerCustomDay(world, "my-event");
 
-// Or specify an explicit interval in ticks
-api.registerCustomDayType(new CustomDayType("double-night", "Double Night"), 48000L);
-
-// Trigger a custom day immediately
-api.triggerCustomDay("my-event", world);
-
-DayInfoService info = api.getDayInfoService();
-boolean isDay = info.isDay(world);
+boolean isDay = api.isDay(world);
 ```
 
 The API types live under `me.BaddCamden.DayUtils.api` and are documented with Javadocs in the source.
