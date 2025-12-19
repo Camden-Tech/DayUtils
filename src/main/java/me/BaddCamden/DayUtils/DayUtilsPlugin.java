@@ -1,6 +1,6 @@
 package me.BaddCamden.DayUtils;
 
-import me.BaddCamden.DayUtils.api.DayUtilsAPI;
+import me.BaddCamden.DayUtils.api.DayUtilsApi;
 import me.BaddCamden.DayUtils.command.DayUtilsCommand;
 import me.BaddCamden.DayUtils.config.DaySettings;
 import me.BaddCamden.DayUtils.config.ConfigLoader;
@@ -13,7 +13,7 @@ public class DayUtilsPlugin extends JavaPlugin {
     private ConfigLoader configLoader;
     private DayUtilsConfiguration configurationModel;
     private DayCycleManager cycleManager;
-    private DayUtilsAPI api;
+    private DayUtilsApi api;
     private boolean configDirty;
 
     @Override
@@ -22,7 +22,7 @@ public class DayUtilsPlugin extends JavaPlugin {
         this.configLoader = new ConfigLoader(this);
         reloadConfigurationModel();
 
-        this.api = DayUtilsAPI.bootstrap(() -> cycleManager);
+        this.api = DayUtilsApi.bootstrap(() -> cycleManager);
         DayUtilsCommand command = new DayUtilsCommand(this);
         if (getCommand("dayutils") != null) {
             getCommand("dayutils").setExecutor(command);
@@ -69,7 +69,7 @@ public class DayUtilsPlugin extends JavaPlugin {
         return cycleManager;
     }
 
-    public DayUtilsAPI getApi() {
+    public DayUtilsApi getApi() {
         return api;
     }
 
