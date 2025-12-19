@@ -19,6 +19,10 @@
  * }
  * </pre>
  *
+ * <p>Event listeners can subscribe to {@link me.BaddCamden.DayUtils.api.event.TimeTickEvent},
+ * {@link me.BaddCamden.DayUtils.api.event.DayPhaseChangeEvent}, or
+ * {@link me.BaddCamden.DayUtils.api.event.CustomDayTriggerEvent} to respond to cycle updates.</p>
+ *
  * <p>The {@link me.BaddCamden.DayUtils.api.DayInfoService} exposed by the API can be used to
  * check whether a world is currently experiencing day, night, or a custom day type.</p>
  */

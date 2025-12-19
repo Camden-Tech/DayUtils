@@ -1,4 +1,4 @@
-package me.BaddCamden.DayUtils.event;
+package me.BaddCamden.DayUtils.api.event;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -9,6 +9,18 @@ import org.bukkit.event.HandlerList;
 
 /**
  * Fired every tick with the current time state for a world.
+ *
+ * <p>Listeners can use this event to react to fine-grained progress updates. For example:</p>
+ * <pre>{@code
+ * @EventHandler
+ * public void onTick(TimeTickEvent event) {
+ *     double cycle = event.getCyclePercent();
+ *     if (cycle > 0.5) {
+ *         // Second half of the day/night cycle
+ *     }
+ * }
+ * }</pre>
+ * <p>Register your listener with Bukkit's plugin manager to receive callbacks.</p>
  */
 public class TimeTickEvent extends Event {
     private static final HandlerList HANDLERS = new HandlerList();
@@ -23,7 +35,6 @@ public class TimeTickEvent extends Event {
 
     public TimeTickEvent(World world, boolean day, boolean night, double dayPercent, double nightPercent,
                          double cyclePercent, Map<String, Double> customProgress) {
-        super();
         this.world = world;
         this.day = day;
         this.night = night;

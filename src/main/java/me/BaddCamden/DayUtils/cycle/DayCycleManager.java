@@ -1,14 +1,18 @@
 package me.BaddCamden.DayUtils.cycle;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import me.BaddCamden.DayUtils.config.CustomDayType;
 import me.BaddCamden.DayUtils.config.DaySettings;
 import me.BaddCamden.DayUtils.config.DayUtilsConfiguration;
+import me.BaddCamden.DayUtils.api.event.CustomDayTriggerEvent;
+import me.BaddCamden.DayUtils.api.event.DayPhaseChangeEvent;
+import me.BaddCamden.DayUtils.api.event.TimeTickEvent;
 import me.BaddCamden.DayUtils.event.CustomDayEvent;
-import me.BaddCamden.DayUtils.event.TimeTickEvent;
 import me.BaddCamden.DayUtils.integration.SessionLibraryHook;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
@@ -95,6 +99,13 @@ public class DayCycleManager {
                 result.dayPercent(), result.nightPercent(), result.cyclePercent(),
                 result.customProgress());
             Bukkit.getPluginManager().callEvent(event);
+            if (result.phaseChange() != null) {
+                Bukkit.getPluginManager().callEvent(new DayPhaseChangeEvent(world, result.phaseChange()));
+            }
+            for (CustomDayType triggered : result.triggeredCustomTypes()) {
+                Bukkit.getPluginManager().callEvent(new CustomDayTriggerEvent(world, triggered));
+                Bukkit.getPluginManager().callEvent(new CustomDayEvent(world, triggered));
+            }
         }
     }
 
@@ -103,6 +114,7 @@ public class DayCycleManager {
         private DaySettings settings;
         private double cycleProgress;
         private final Map<String, CustomDayProgress> customProgress = new HashMap<>();
+        private Boolean lastDayState;
 
         WorldCycleState(World world, DaySettings settings) {
             this.world = world;
@@ -143,17 +155,23 @@ public class DayCycleManager {
             double nightPercent = isDay ? 0.0d : ((cycleProgress - settings.getDayLength()) / settings.getNightLength());
             double cyclePercent = cycleProgress / cycleLength;
 
+            DayPhaseChangeEvent.Phase phaseChange = null;
+            if (lastDayState != null && lastDayState != isDay) {
+                phaseChange = isDay ? DayPhaseChangeEvent.Phase.DAY : DayPhaseChangeEvent.Phase.NIGHT;
+            }
+            lastDayState = isDay;
+
             // Map to vanilla time
             long worldTime = Math.round(cyclePercent * 24000.0d) % 24000L;
             world.setFullTime(world.getFullTime() - (world.getFullTime() % 24000L) + worldTime);
             world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
 
             Map<String, Double> customPercentages = new HashMap<>();
+            List<CustomDayType> triggeredTypes = new ArrayList<>();
             for (CustomDayProgress progress : customProgress.values()) {
                 double value = progress.advance(speed);
                 if (progress.shouldTrigger()) {
-                    Bukkit.getPluginManager().callEvent(
-                        new CustomDayEvent(world, progress.type()));
+                    triggeredTypes.add(progress.type());
                     progress.reset();
                     value = progress.progress();
                 }
@@ -161,7 +179,7 @@ public class DayCycleManager {
             }
 
             return new TickResult(isDay, isNight, clamp(dayPercent), clamp(nightPercent), clamp(cyclePercent),
-                customPercentages);
+                customPercentages, phaseChange, triggeredTypes);
         }
 
         CycleSnapshot snapshot() {
@@ -187,6 +205,7 @@ public class DayCycleManager {
             if (progress == null) {
                 return false;
             }
+            Bukkit.getPluginManager().callEvent(new CustomDayTriggerEvent(world, progress.type()));
             Bukkit.getPluginManager().callEvent(new CustomDayEvent(world, progress.type()));
             progress.reset();
             return true;
@@ -235,6 +254,8 @@ public class DayCycleManager {
 
     private record TickResult(boolean isDay, boolean isNight, double dayPercent,
                               double nightPercent, double cyclePercent,
-                              Map<String, Double> customProgress) {
+                              Map<String, Double> customProgress,
+                              DayPhaseChangeEvent.Phase phaseChange,
+                              List<CustomDayType> triggeredCustomTypes) {
     }
 }

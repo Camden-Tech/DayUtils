@@ -3,7 +3,7 @@ package me.BaddCamden.DayUtils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import me.BaddCamden.DayUtils.api.DayPhaseChangeEvent;
+import me.BaddCamden.DayUtils.api.event.DayPhaseChangeEvent;
 import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
