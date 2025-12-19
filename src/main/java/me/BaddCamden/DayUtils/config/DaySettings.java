@@ -3,6 +3,7 @@ package me.BaddCamden.DayUtils.config;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -17,10 +18,16 @@ public class DaySettings {
 
     public DaySettings(long dayLength, long nightLength, double speedMultiplier,
                        Map<String, CustomDayType> customTypes) {
-        this.dayLength = Math.max(1, dayLength);
-        this.nightLength = Math.max(1, nightLength);
-        this.speedMultiplier = Math.max(0.01d, speedMultiplier);
-        this.customTypes = Collections.unmodifiableMap(new LinkedHashMap<>(customTypes));
+        this.dayLength = SettingsConstraints.clampLength(dayLength);
+        this.nightLength = SettingsConstraints.clampLength(nightLength);
+        this.speedMultiplier = SettingsConstraints.clampSpeed(speedMultiplier);
+        this.customTypes = Collections.unmodifiableMap(
+            customTypes.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
+                    CustomDayType type = entry.getValue();
+                    long interval = SettingsConstraints.clampCustomInterval(type.getIntervalTicks());
+                    return new CustomDayType(type.getName(), interval);
+                }, (a, b) -> a, LinkedHashMap::new)));
     }
 
     public long getDayLength() {
@@ -49,9 +56,7 @@ public class DaySettings {
         if (section != null) {
             for (String key : section.getKeys(false)) {
                 long interval = section.getLong(key, 0L);
-                if (interval > 0) {
-                    customTypes.put(key.toLowerCase(), new CustomDayType(key, interval));
-                }
+                customTypes.put(key.toLowerCase(), new CustomDayType(key, interval));
             }
         }
 

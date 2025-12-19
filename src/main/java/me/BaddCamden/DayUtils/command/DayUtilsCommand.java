@@ -9,6 +9,7 @@ import me.BaddCamden.DayUtils.config.MessageSettings;
 import me.BaddCamden.DayUtils.config.CustomDayType;
 import me.BaddCamden.DayUtils.config.CommandSettings;
 import me.BaddCamden.DayUtils.config.DaySettings;
+import me.BaddCamden.DayUtils.config.SettingsConstraints;
 import me.BaddCamden.DayUtils.cycle.DayCycleManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -25,11 +26,6 @@ import org.jetbrains.annotations.Nullable;
  * Handles the /dayutils command and subcommands.
  */
 public class DayUtilsCommand implements CommandExecutor, TabCompleter {
-
-    private static final long MIN_LENGTH_TICKS = 20L;
-    private static final long MAX_LENGTH_TICKS = 240000L;
-    private static final double MIN_SPEED = 0.1D;
-    private static final double MAX_SPEED = 10.0D;
 
     private final DayUtilsPlugin plugin;
 
@@ -137,17 +133,16 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(colour(messages.getSetDayLength().notNumber()));
             return true;
         }
-        if (!validateBounds(value, MIN_LENGTH_TICKS, MAX_LENGTH_TICKS)) {
+        if (!validateBounds(value, SettingsConstraints.MIN_LENGTH_TICKS, SettingsConstraints.MAX_LENGTH_TICKS)) {
             sender.sendMessage(colour(messages.getSetDayLength().outOfBounds()
-                .replace("{min}", String.valueOf(MIN_LENGTH_TICKS))
-                .replace("{max}", String.valueOf(MAX_LENGTH_TICKS))));
+                .replace("{min}", String.valueOf(SettingsConstraints.MIN_LENGTH_TICKS))
+                .replace("{max}", String.valueOf(SettingsConstraints.MAX_LENGTH_TICKS))));
             return true;
         }
 
         DaySettings current = configuration.getDaySettings();
         DaySettings updated = new DaySettings(value, current.getNightLength(), current.getSpeedMultiplier(),
             current.getCustomTypes());
-        plugin.getConfig().set("day.length", value);
         plugin.updateDaySettings(updated);
 
         sender.sendMessage(colour(messages.getSetDayLength().success()
@@ -170,17 +165,16 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(colour(messages.getSetNightLength().notNumber()));
             return true;
         }
-        if (!validateBounds(value, MIN_LENGTH_TICKS, MAX_LENGTH_TICKS)) {
+        if (!validateBounds(value, SettingsConstraints.MIN_LENGTH_TICKS, SettingsConstraints.MAX_LENGTH_TICKS)) {
             sender.sendMessage(colour(messages.getSetNightLength().outOfBounds()
-                .replace("{min}", String.valueOf(MIN_LENGTH_TICKS))
-                .replace("{max}", String.valueOf(MAX_LENGTH_TICKS))));
+                .replace("{min}", String.valueOf(SettingsConstraints.MIN_LENGTH_TICKS))
+                .replace("{max}", String.valueOf(SettingsConstraints.MAX_LENGTH_TICKS))));
             return true;
         }
 
         DaySettings current = configuration.getDaySettings();
         DaySettings updated = new DaySettings(current.getDayLength(), value, current.getSpeedMultiplier(),
             current.getCustomTypes());
-        plugin.getConfig().set("day.nightLength", value);
         plugin.updateDaySettings(updated);
 
         sender.sendMessage(colour(messages.getSetNightLength().success()
@@ -203,17 +197,16 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(colour(messages.getSetSpeed().notNumber()));
             return true;
         }
-        if (multiplier < MIN_SPEED || multiplier > MAX_SPEED) {
+        if (multiplier < SettingsConstraints.MIN_SPEED || multiplier > SettingsConstraints.MAX_SPEED) {
             sender.sendMessage(colour(messages.getSetSpeed().outOfBounds()
-                .replace("{min}", String.valueOf(MIN_SPEED))
-                .replace("{max}", String.valueOf(MAX_SPEED))));
+                .replace("{min}", String.valueOf(SettingsConstraints.MIN_SPEED))
+                .replace("{max}", String.valueOf(SettingsConstraints.MAX_SPEED))));
             return true;
         }
 
         DaySettings current = configuration.getDaySettings();
         DaySettings updated = new DaySettings(current.getDayLength(), current.getNightLength(), multiplier,
             current.getCustomTypes());
-        plugin.getConfig().set("day.speed", multiplier);
         plugin.updateDaySettings(updated);
 
         sender.sendMessage(colour(messages.getSetSpeed().success()
