@@ -12,7 +12,7 @@ import me.BaddCamden.DayUtils.config.DayUtilsConfiguration;
 import me.BaddCamden.DayUtils.api.event.CustomDayTriggerEvent;
 import me.BaddCamden.DayUtils.api.event.DayPhaseChangeEvent;
 import me.BaddCamden.DayUtils.api.event.TimeTickEvent;
-import me.BaddCamden.DayUtils.event.CustomDayEvent;
+import me.BaddCamden.DayUtils.api.event.CustomDayEvent;
 import me.BaddCamden.DayUtils.integration.SessionLibraryHook;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
@@ -104,7 +104,7 @@ public class DayCycleManager {
             }
             for (CustomDayType triggered : result.triggeredCustomTypes()) {
                 Bukkit.getPluginManager().callEvent(new CustomDayTriggerEvent(world, triggered));
-                Bukkit.getPluginManager().callEvent(new CustomDayEvent(world, triggered));
+                Bukkit.getPluginManager().callEvent(new CustomDayEvent(world, triggered, CustomDayEvent.Phase.START));
             }
         }
     }
@@ -206,7 +206,7 @@ public class DayCycleManager {
                 return false;
             }
             Bukkit.getPluginManager().callEvent(new CustomDayTriggerEvent(world, progress.type()));
-            Bukkit.getPluginManager().callEvent(new CustomDayEvent(world, progress.type()));
+            Bukkit.getPluginManager().callEvent(new CustomDayEvent(world, progress.type(), CustomDayEvent.Phase.START));
             progress.reset();
             return true;
         }

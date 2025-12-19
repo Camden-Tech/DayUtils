@@ -1,4 +1,4 @@
-package me.BaddCamden.DayUtils.api;
+package me.BaddCamden.DayUtils.api.event;
 
 import me.BaddCamden.DayUtils.config.CustomDayType;
 import org.bukkit.World;

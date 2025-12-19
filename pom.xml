@@ -36,12 +36,11 @@
       <version>${paper.api.version}</version>
       <scope>provided</scope>
     </dependency>
-    <dependency>
-      <groupId>com.github.BaddCamden</groupId>
-      <artifactId>SessionLibrary</artifactId>
-      <version>${sessionlibrary.version}</version>
-      <scope>provided</scope>
-    </dependency>
+      <dependency>
+          <groupId>SessionLibrary</groupId>
+          <artifactId>SessionLibrary</artifactId>
+          <version>0.0.1-SNAPSHOT</version>
+      </dependency>
   </dependencies>
 
   <build>
