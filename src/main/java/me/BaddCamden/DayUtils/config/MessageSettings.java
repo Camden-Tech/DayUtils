@@ -12,17 +12,19 @@ public class MessageSettings {
     private final LengthMessages setNightLength;
     private final SpeedMessages setSpeed;
     private final TriggerMessages trigger;
+    private final NightsPassedMessages setNightsPassed;
     private final StatusMessages status;
 
     public MessageSettings(String usage, ReloadMessages reload, LengthMessages setDayLength,
                            LengthMessages setNightLength, SpeedMessages setSpeed,
-                           TriggerMessages trigger, StatusMessages status) {
+                           TriggerMessages trigger, NightsPassedMessages setNightsPassed, StatusMessages status) {
         this.usage = usage;
         this.reload = reload;
         this.setDayLength = setDayLength;
         this.setNightLength = setNightLength;
         this.setSpeed = setSpeed;
         this.trigger = trigger;
+        this.setNightsPassed = setNightsPassed;
         this.status = status;
     }
 
@@ -50,12 +52,18 @@ public class MessageSettings {
         return trigger;
     }
 
+    public NightsPassedMessages getSetNightsPassed() {
+        return setNightsPassed;
+    }
+
     public StatusMessages getStatus() {
         return status;
     }
 
     public static MessageSettings fromConfig(FileConfiguration config) {
-        String usage = config.getString("messages.usage", "&eDayUtils usage");
+        String usage = config.getString("messages.usage",
+            "&eDayUtils usage: /{label} reload | /{label} trigger <type> [world] | /{label} setdaylength <ticks> | "
+                + "/{label} setnightlength <ticks> | /{label} setspeed <0.1-10> | /{label} setnightspassed <count> [world] | /{label} status [world]");
         ReloadMessages reload = new ReloadMessages(
             config.getString("messages.reload.noPermission", "&cYou do not have permission to reload DayUtils."),
             config.getString("messages.reload.success", "&aDayUtils configuration reloaded.")
@@ -87,15 +95,25 @@ public class MessageSettings {
             config.getString("messages.trigger.success", "&aTriggered custom day '{type}' in {world}."),
             config.getString("messages.trigger.unknownType", "&cUnknown custom day '{type}'. Available: {available}")
         );
+        NightsPassedMessages setNightsPassed = new NightsPassedMessages(
+            config.getString("messages.setNightsPassed.noPermission", "&cYou do not have permission."),
+            config.getString("messages.setNightsPassed.usage", "&eUsage: /dayutils setnightspassed <count> [world]"),
+            config.getString("messages.setNightsPassed.notNumber", "&cNights passed must be a whole number."),
+            config.getString("messages.setNightsPassed.outOfBounds", "&cNights passed cannot be negative."),
+            config.getString("messages.setNightsPassed.worldMissing", "&cUnable to resolve world to set nights."),
+            config.getString("messages.setNightsPassed.success", "&aSet nights passed in {world} to {count}.")
+        );
         StatusMessages status = new StatusMessages(
             config.getString("messages.status.worldMissing", "&cUnable to resolve world for status."),
             config.getString("messages.status.customDay", "&bCustom day {name} progress: {progress} in {world}"),
             config.getString("messages.status.day", "&aDaytime in {world} ({progress} complete)."),
             config.getString("messages.status.night", "&9Nighttime in {world} ({progress} complete)."),
+            config.getString("messages.status.nightsPassed", "&7Nights passed in {world}: {count}"),
             config.getString("messages.status.unavailable", "&eCycle status unavailable for {world}")
         );
 
-        return new MessageSettings(usage, reload, setDayLength, setNightLength, setSpeed, trigger, status);
+        return new MessageSettings(usage, reload, setDayLength, setNightLength, setSpeed, trigger, setNightsPassed,
+            status);
     }
 
     public record ReloadMessages(String noPermission, String success) {
@@ -112,7 +130,11 @@ public class MessageSettings {
     public record TriggerMessages(String noPermission, String worldMissing, String success, String unknownType) {
     }
 
-    public record StatusMessages(String worldMissing, String customDay, String day, String night,
+    public record NightsPassedMessages(String noPermission, String usage, String notNumber, String outOfBounds,
+                                       String worldMissing, String success) {
+    }
+
+    public record StatusMessages(String worldMissing, String customDay, String day, String night, String nightsPassed,
                                  String unavailable) {
     }
 }

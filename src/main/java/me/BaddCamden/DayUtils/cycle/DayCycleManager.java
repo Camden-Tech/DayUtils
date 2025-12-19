@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import me.BaddCamden.DayUtils.DayUtilsPlugin;
 import me.BaddCamden.DayUtils.config.CustomDayType;
 import me.BaddCamden.DayUtils.config.DaySettings;
 import me.BaddCamden.DayUtils.config.DayUtilsConfiguration;
@@ -18,20 +19,19 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
 import org.bukkit.World;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.plugin.Plugin;
 
 /**
  * Controls world time progression and emits tick events with calculated state.
  */
 public class DayCycleManager {
 
-    private final Plugin plugin;
+    private final DayUtilsPlugin plugin;
     private BukkitTask tickTask;
     private DayUtilsConfiguration configuration;
     private final Map<UUID, WorldCycleState> worldStates = new HashMap<>();
     private final SessionLibraryHook sessionLibraryHook;
 
-    public DayCycleManager(Plugin plugin, DayUtilsConfiguration configuration) {
+    public DayCycleManager(DayUtilsPlugin plugin, DayUtilsConfiguration configuration) {
         this.plugin = plugin;
         this.configuration = configuration;
         this.sessionLibraryHook = new SessionLibraryHook(plugin);
@@ -66,8 +66,7 @@ public class DayCycleManager {
     }
 
     public CycleSnapshot snapshot(World world) {
-        WorldCycleState state = worldStates.computeIfAbsent(world.getUID(),
-            id -> new WorldCycleState(world, configuration.getDaySettings()));
+        WorldCycleState state = stateFor(world);
         return state == null ? null : state.snapshot();
     }
 
@@ -82,9 +81,22 @@ public class DayCycleManager {
         return state != null && state.triggerCustomDay(type);
     }
 
+    public boolean setNightsPassed(World world, long nightsPassed) {
+        if (world == null) {
+            return false;
+        }
+        WorldCycleState state = stateFor(world);
+        if (state == null) {
+            return false;
+        }
+        state.setNightsPassed(Math.max(0L, nightsPassed));
+        persistNightsPassed(world, state.nightsPassed());
+        return true;
+    }
+
     private void initWorld(World world) {
         world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
-        worldStates.put(world.getUID(), new WorldCycleState(world, configuration.getDaySettings()));
+        worldStates.put(world.getUID(), createState(world));
     }
 
     private void tick() {
@@ -92,15 +104,18 @@ public class DayCycleManager {
             return;
         }
         for (World world : Bukkit.getWorlds()) {
-            worldStates.computeIfAbsent(world.getUID(), id -> new WorldCycleState(world, configuration.getDaySettings()));
-            WorldCycleState state = worldStates.get(world.getUID());
+            WorldCycleState state = stateFor(world);
             TickResult result = state.tick();
             TimeTickEvent event = new TimeTickEvent(world, result.isDay(), result.isNight(),
                 result.dayPercent(), result.nightPercent(), result.cyclePercent(),
-                result.customProgress());
+                result.customProgress(), result.nightsPassed());
             Bukkit.getPluginManager().callEvent(event);
             if (result.phaseChange() != null) {
-                Bukkit.getPluginManager().callEvent(new DayPhaseChangeEvent(world, result.phaseChange()));
+                Bukkit.getPluginManager().callEvent(new DayPhaseChangeEvent(world, result.phaseChange(),
+                    result.nightsPassed()));
+            }
+            if (result.nightCompleted()) {
+                persistNightsPassed(world, result.nightsPassed());
             }
             for (CustomDayType triggered : result.triggeredCustomTypes()) {
                 Bukkit.getPluginManager().callEvent(new CustomDayTriggerEvent(world, triggered));
@@ -109,17 +124,41 @@ public class DayCycleManager {
         }
     }
 
+    private WorldCycleState createState(World world) {
+        long nightsPassed = loadNightsPassed(world);
+        return new WorldCycleState(world, configuration.getDaySettings(), nightsPassed);
+    }
+
+    private WorldCycleState stateFor(World world) {
+        return worldStates.computeIfAbsent(world.getUID(), id -> createState(world));
+    }
+
+    private long loadNightsPassed(World world) {
+        return plugin.getConfig().getLong(statePath(world), 0L);
+    }
+
+    private void persistNightsPassed(World world, long nightsPassed) {
+        plugin.getConfig().set(statePath(world), nightsPassed);
+        plugin.markConfigDirty();
+    }
+
+    private String statePath(World world) {
+        return "state." + world.getUID() + ".nightsPassed";
+    }
+
     private static class WorldCycleState {
         private final World world;
         private DaySettings settings;
         private double cycleProgress;
         private final Map<String, CustomDayProgress> customProgress = new HashMap<>();
         private Boolean lastDayState;
+        private long nightsPassed;
 
-        WorldCycleState(World world, DaySettings settings) {
+        WorldCycleState(World world, DaySettings settings, long nightsPassed) {
             this.world = world;
             this.settings = settings;
             this.cycleProgress = 0;
+            this.nightsPassed = Math.max(0L, nightsPassed);
             settings.getCustomTypes().values()
                 .forEach(type -> customProgress.put(type.getName().toLowerCase(Locale.ROOT),
                     new CustomDayProgress(type)));
@@ -156,10 +195,15 @@ public class DayCycleManager {
             double cyclePercent = cycleProgress / cycleLength;
 
             DayPhaseChangeEvent.Phase phaseChange = null;
-            if (lastDayState != null && lastDayState != isDay) {
+            Boolean previousDayState = lastDayState;
+            if (previousDayState != null && previousDayState != isDay) {
                 phaseChange = isDay ? DayPhaseChangeEvent.Phase.DAY : DayPhaseChangeEvent.Phase.NIGHT;
             }
             lastDayState = isDay;
+            boolean nightCompleted = previousDayState != null && !previousDayState && isDay;
+            if (nightCompleted) {
+                nightsPassed++;
+            }
 
             // Map to vanilla time
             long worldTime = Math.round(cyclePercent * 24000.0d) % 24000L;
@@ -179,7 +223,7 @@ public class DayCycleManager {
             }
 
             return new TickResult(isDay, isNight, clamp(dayPercent), clamp(nightPercent), clamp(cyclePercent),
-                customPercentages, phaseChange, triggeredTypes);
+                customPercentages, nightsPassed, nightCompleted, phaseChange, triggeredTypes);
         }
 
         CycleSnapshot snapshot() {
@@ -193,7 +237,7 @@ public class DayCycleManager {
                 customPercentages.put(entry.getKey(), entry.getValue().progress());
             }
             return new CycleSnapshot(world, isDay, !isDay, clamp(dayPercent), clamp(nightPercent),
-                clamp(cyclePercent), customPercentages, settings);
+                clamp(cyclePercent), customPercentages, settings, nightsPassed);
         }
 
         void restoreDefaults() {
@@ -209,6 +253,14 @@ public class DayCycleManager {
             Bukkit.getPluginManager().callEvent(new CustomDayEvent(world, progress.type(), CustomDayEvent.Phase.START));
             progress.reset();
             return true;
+        }
+
+        void setNightsPassed(long nightsPassed) {
+            this.nightsPassed = Math.max(0L, nightsPassed);
+        }
+
+        long nightsPassed() {
+            return nightsPassed;
         }
 
         private double clamp(double value) {
@@ -255,6 +307,7 @@ public class DayCycleManager {
     private record TickResult(boolean isDay, boolean isNight, double dayPercent,
                               double nightPercent, double cyclePercent,
                               Map<String, Double> customProgress,
+                              long nightsPassed, boolean nightCompleted,
                               DayPhaseChangeEvent.Phase phaseChange,
                               List<CustomDayType> triggeredCustomTypes) {
     }

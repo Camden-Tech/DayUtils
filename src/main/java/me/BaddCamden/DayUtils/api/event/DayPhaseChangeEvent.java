@@ -15,6 +15,7 @@ import org.bukkit.event.HandlerList;
  *     if (event.getNewPhase() == DayPhaseChangeEvent.Phase.NIGHT) {
  *         // Enable custom mob spawns or alerts
  *     }
+ *     long nights = event.getNightsPassed();
  * }
  * }</pre>
  * <p>Register your listener with Bukkit's plugin manager to receive callbacks.</p>
@@ -24,10 +25,12 @@ public class DayPhaseChangeEvent extends Event {
 
     private final World world;
     private final Phase newPhase;
+    private final long nightsPassed;
 
-    public DayPhaseChangeEvent(World world, Phase newPhase) {
+    public DayPhaseChangeEvent(World world, Phase newPhase, long nightsPassed) {
         this.world = world;
         this.newPhase = newPhase;
+        this.nightsPassed = nightsPassed;
     }
 
     public World getWorld() {
@@ -36,6 +39,10 @@ public class DayPhaseChangeEvent extends Event {
 
     public Phase getNewPhase() {
         return newPhase;
+    }
+
+    public long getNightsPassed() {
+        return nightsPassed;
     }
 
     @Override
