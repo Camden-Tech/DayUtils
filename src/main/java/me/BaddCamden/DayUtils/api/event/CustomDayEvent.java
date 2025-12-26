@@ -15,20 +15,32 @@ public class CustomDayEvent extends Event {
     private final CustomDayType dayType;
     private final Phase phase;
 
+    /**
+     * Creates a new event for the given custom day phase transition.
+     */
     public CustomDayEvent(World world, CustomDayType dayType, Phase phase) {
         this.world = world;
         this.dayType = dayType;
         this.phase = phase;
     }
 
+    /**
+     * @return world where the custom day is occurring
+     */
     public World world() {
         return world;
     }
 
+    /**
+     * @return the triggered custom day type
+     */
     public CustomDayType dayType() {
         return dayType;
     }
 
+    /**
+     * @return whether this event marks the start or end of the custom day
+     */
     public Phase phase() {
         return phase;
     }
@@ -38,6 +50,9 @@ public class CustomDayEvent extends Event {
         return HANDLERS;
     }
 
+    /**
+     * @return shared handler list for Bukkit's event system
+     */
     public static HandlerList getHandlerList() {
         return HANDLERS;
     }

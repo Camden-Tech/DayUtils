@@ -16,6 +16,14 @@ public class DaySettings {
     private final double speedMultiplier;
     private final Map<String, CustomDayType> customTypes;
 
+    /**
+     * Constructs immutable day settings, clamping values within configured bounds.
+     *
+     * @param dayLength day duration in ticks
+     * @param nightLength night duration in ticks
+     * @param speedMultiplier how quickly time should progress
+     * @param customTypes map of custom day types keyed by lower-case identifier
+     */
     public DaySettings(long dayLength, long nightLength, double speedMultiplier,
                        Map<String, CustomDayType> customTypes) {
         this.dayLength = SettingsConstraints.clampLength(dayLength);
@@ -30,22 +38,37 @@ public class DaySettings {
                 }, (a, b) -> a, LinkedHashMap::new)));
     }
 
+    /**
+     * @return configured day length in ticks
+     */
     public long getDayLength() {
         return dayLength;
     }
 
+    /**
+     * @return configured night length in ticks
+     */
     public long getNightLength() {
         return nightLength;
     }
 
+    /**
+     * @return multiplier applied to time progression speed
+     */
     public double getSpeedMultiplier() {
         return speedMultiplier;
     }
 
+    /**
+     * @return unmodifiable map of registered custom day types keyed by identifier
+     */
     public Map<String, CustomDayType> getCustomTypes() {
         return customTypes;
     }
 
+    /**
+     * Builds settings from the Bukkit configuration, applying sensible defaults.
+     */
     public static DaySettings fromConfig(FileConfiguration config) {
         long day = config.getLong("day.length", 12000L);
         long night = config.getLong("day.nightLength", 12000L);

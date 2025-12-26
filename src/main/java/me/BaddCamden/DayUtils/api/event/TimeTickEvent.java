@@ -35,6 +35,9 @@ public class TimeTickEvent extends Event {
     private final Map<String, Double> customProgress;
     private final long nightsPassed;
 
+    /**
+     * Creates a tick event snapshot for a world.
+     */
     public TimeTickEvent(World world, boolean day, boolean night, double dayPercent, double nightPercent,
                          double cyclePercent, Map<String, Double> customProgress, long nightsPassed) {
         this.world = world;
@@ -47,34 +50,58 @@ public class TimeTickEvent extends Event {
         this.nightsPassed = nightsPassed;
     }
 
+    /**
+     * @return the world this tick information describes
+     */
     public World getWorld() {
         return world;
     }
 
+    /**
+     * @return true if the world is currently in the day portion of the cycle
+     */
     public boolean isDay() {
         return day;
     }
 
+    /**
+     * @return true if the world is currently in the night portion of the cycle
+     */
     public boolean isNight() {
         return night;
     }
 
+    /**
+     * @return progress through the configured day length
+     */
     public double getDayPercent() {
         return dayPercent;
     }
 
+    /**
+     * @return progress through the configured night length
+     */
     public double getNightPercent() {
         return nightPercent;
     }
 
+    /**
+     * @return overall progress through the day/night cycle
+     */
     public double getCyclePercent() {
         return cyclePercent;
     }
 
+    /**
+     * @return progress for each custom day type
+     */
     public Map<String, Double> getCustomProgress() {
         return customProgress;
     }
 
+    /**
+     * @return number of completed nights in the world
+     */
     public long getNightsPassed() {
         return nightsPassed;
     }
@@ -84,6 +111,9 @@ public class TimeTickEvent extends Event {
         return HANDLERS;
     }
 
+    /**
+     * @return shared handler list for registering listeners
+     */
     public static HandlerList getHandlerList() {
         return HANDLERS;
     }

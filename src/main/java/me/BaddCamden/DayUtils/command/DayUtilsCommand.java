@@ -29,10 +29,18 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
 
     private final DayUtilsPlugin plugin;
 
+    /**
+     * Creates a command handler bound to the provided plugin instance.
+     *
+     * @param plugin the owning plugin
+     */
     public DayUtilsCommand(DayUtilsPlugin plugin) {
         this.plugin = plugin;
     }
 
+    /**
+     * Routes the /dayutils command to the appropriate sub-command implementation.
+     */
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
                              @NotNull String[] args) {
@@ -79,6 +87,9 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
         }
     }
 
+    /**
+     * Reloads configuration when the sender has permission and notifies them of the result.
+     */
     private boolean handleReload(CommandSender sender, MessageSettings messages) {
         CommandSettings permissions = plugin.getConfigurationModel().getCommandSettings();
         if (!sender.hasPermission(permissions.getReloadPermission())) {
@@ -90,6 +101,9 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Triggers a custom day cycle type for a world, validating permissions and arguments.
+     */
     private boolean handleTrigger(CommandSender sender, String label, String[] args, CommandSettings permissions,
                                   MessageSettings messages, DayCycleManager manager) {
         if (!sender.hasPermission(permissions.getTriggerPermission())) {
@@ -121,6 +135,9 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Updates the configured day length when the sender provides a valid tick value.
+     */
     private boolean handleSetDayLength(CommandSender sender, String[] args, CommandSettings permissions,
                                        MessageSettings messages, DayUtilsConfiguration configuration) {
         if (!sender.hasPermission(permissions.getSetDayLengthPermission())) {
@@ -153,6 +170,9 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Updates the configured night length when the sender provides a valid tick value.
+     */
     private boolean handleSetNightLength(CommandSender sender, String[] args, CommandSettings permissions,
                                          MessageSettings messages, DayUtilsConfiguration configuration) {
         if (!sender.hasPermission(permissions.getSetNightLengthPermission())) {
@@ -185,6 +205,9 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Adjusts the time progression speed multiplier when supplied within valid bounds.
+     */
     private boolean handleSetSpeed(CommandSender sender, String[] args, CommandSettings permissions,
                                    MessageSettings messages, DayUtilsConfiguration configuration) {
         if (!sender.hasPermission(permissions.getSetSpeedPermission())) {
@@ -217,6 +240,9 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Overrides the recorded nights passed count for a world if the sender provides a valid number.
+     */
     private boolean handleSetNightsPassed(CommandSender sender, String[] args, CommandSettings permissions,
                                           MessageSettings messages, DayCycleManager manager) {
         if (!sender.hasPermission(permissions.getSetNightsPassedPermission())) {
@@ -250,6 +276,9 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Reports current day/night status and custom progress for the selected world.
+     */
     private boolean handleStatus(CommandSender sender, String[] args, MessageSettings messages,
                                  DayCycleManager manager) {
         World world = resolveWorld(sender, args.length > 1 ? args[1] : null);
@@ -288,6 +317,9 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Supplies tab-completion candidates for /dayutils based on the entered arguments.
+     */
     @Override
     public @Nullable java.util.List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                                           @NotNull String alias, @NotNull String[] args) {
@@ -307,14 +339,23 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
         return java.util.Collections.emptyList();
     }
 
+    /**
+     * Translates legacy colour codes using Bukkit's ChatColor.
+     */
     private String colour(String input) {
         return ChatColor.translateAlternateColorCodes('&', input);
     }
 
+    /**
+     * Confirms that a provided long value falls within the given inclusive bounds.
+     */
     private boolean validateBounds(long value, long min, long max) {
         return value >= min && value <= max;
     }
 
+    /**
+     * Attempts to parse a long, returning null when the input is not numeric.
+     */
     private Long parseLong(String input) {
         try {
             return Long.parseLong(input);
@@ -323,6 +364,9 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
         }
     }
 
+    /**
+     * Attempts to parse a double, returning null when the input is not numeric.
+     */
     private Double parseDouble(String input) {
         try {
             return Double.parseDouble(input);
@@ -331,6 +375,9 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
         }
     }
 
+    /**
+     * Resolves a target world from an optional name or falls back to the sender's world/default.
+     */
     private World resolveWorld(CommandSender sender, @Nullable String name) {
         if (name != null && !name.isEmpty()) {
             return Bukkit.getWorld(name);
@@ -341,6 +388,9 @@ public class DayUtilsCommand implements CommandExecutor, TabCompleter {
         return Bukkit.getWorlds().isEmpty() ? null : Bukkit.getWorlds().getFirst();
     }
 
+    /**
+     * Formats a decimal value as a percentage with one decimal place.
+     */
     private String percent(double value) {
         return String.format(Locale.US, "%.1f%%", value * 100.0d);
     }

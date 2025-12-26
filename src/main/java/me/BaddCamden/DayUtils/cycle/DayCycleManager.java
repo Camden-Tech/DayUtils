@@ -31,12 +31,21 @@ public class DayCycleManager {
     private final Map<UUID, WorldCycleState> worldStates = new HashMap<>();
     private final SessionLibraryHook sessionLibraryHook;
 
+    /**
+     * Builds a cycle manager responsible for advancing time in all worlds.
+     *
+     * @param plugin the owning plugin
+     * @param configuration the initial configuration to apply
+     */
     public DayCycleManager(DayUtilsPlugin plugin, DayUtilsConfiguration configuration) {
         this.plugin = plugin;
         this.configuration = configuration;
         this.sessionLibraryHook = new SessionLibraryHook(plugin);
     }
 
+    /**
+     * Starts ticking all loaded worlds, resetting state to match the current configuration.
+     */
     public void start() {
         stop();
         this.worldStates.clear();
@@ -46,6 +55,9 @@ public class DayCycleManager {
         this.tickTask = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1L, 1L);
     }
 
+    /**
+     * Cancels ticking and restores vanilla daylight behaviour to all tracked worlds.
+     */
     public void stop() {
         if (tickTask != null) {
             tickTask.cancel();
@@ -56,31 +68,62 @@ public class DayCycleManager {
         worldStates.clear();
     }
 
+    /**
+     * Applies a refreshed configuration to existing world states.
+     *
+     * @param configuration the updated configuration snapshot
+     */
     public void updateConfiguration(DayUtilsConfiguration configuration) {
         this.configuration = configuration;
         worldStates.values().forEach(state -> state.updateSettings(configuration.getDaySettings()));
     }
 
+    /**
+     * Returns the current configuration driving the manager.
+     */
     public DayUtilsConfiguration getConfiguration() {
         return configuration;
     }
 
+    /**
+     * Produces a snapshot of the specified world's time state.
+     *
+     * @param world the world to inspect
+     * @return a snapshot or {@code null} if the world is unknown
+     */
     public CycleSnapshot snapshot(World world) {
         WorldCycleState state = stateFor(world);
         return state == null ? null : state.snapshot();
     }
 
+    /**
+     * Produces snapshots for every tracked world keyed by world UUID.
+     */
     public Map<UUID, CycleSnapshot> snapshots() {
         Map<UUID, CycleSnapshot> snapshots = new HashMap<>();
         worldStates.forEach((id, state) -> snapshots.put(id, state.snapshot()));
         return snapshots;
     }
 
+    /**
+     * Manually triggers a custom day type in the given world.
+     *
+     * @param world the world to modify
+     * @param type the custom day identifier
+     * @return true if the type was recognised and triggered
+     */
     public boolean triggerCustomDay(World world, String type) {
         WorldCycleState state = worldStates.get(world.getUID());
         return state != null && state.triggerCustomDay(type);
     }
 
+    /**
+     * Sets the stored nights-passed count for a world, clamping negative values.
+     *
+     * @param world the world to update
+     * @param nightsPassed new nights passed value
+     * @return true when the world was found and updated
+     */
     public boolean setNightsPassed(World world, long nightsPassed) {
         if (world == null) {
             return false;
@@ -94,11 +137,17 @@ public class DayCycleManager {
         return true;
     }
 
+    /**
+     * Prepares a world for managed ticking by disabling vanilla daylight cycle and tracking state.
+     */
     private void initWorld(World world) {
         world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
         worldStates.put(world.getUID(), createState(world));
     }
 
+    /**
+     * Executes a tick for each world if time advancement is permitted.
+     */
     private void tick() {
         if (!sessionLibraryHook.shouldAdvanceTime()) {
             return;
@@ -124,24 +173,39 @@ public class DayCycleManager {
         }
     }
 
+    /**
+     * Creates a new world cycle state with persisted progress restored.
+     */
     private WorldCycleState createState(World world) {
         long nightsPassed = loadNightsPassed(world);
         return new WorldCycleState(world, configuration.getDaySettings(), nightsPassed);
     }
 
+    /**
+     * Retrieves or creates the managed state object for the given world.
+     */
     private WorldCycleState stateFor(World world) {
         return worldStates.computeIfAbsent(world.getUID(), id -> createState(world));
     }
 
+    /**
+     * Reads the persisted nights-passed value for a world from configuration.
+     */
     private long loadNightsPassed(World world) {
         return plugin.getConfig().getLong(statePath(world), 0L);
     }
 
+    /**
+     * Writes the nights-passed value to configuration and marks it dirty for saving.
+     */
     private void persistNightsPassed(World world, long nightsPassed) {
         plugin.getConfig().set(statePath(world), nightsPassed);
         plugin.markConfigDirty();
     }
 
+    /**
+     * Builds the configuration path used to store state for a world.
+     */
     private String statePath(World world) {
         return "state." + world.getUID() + ".nightsPassed";
     }
@@ -154,6 +218,9 @@ public class DayCycleManager {
         private Boolean lastDayState;
         private long nightsPassed;
 
+        /**
+         * Creates managed state for a single world with the given settings and progress.
+         */
         WorldCycleState(World world, DaySettings settings, long nightsPassed) {
             this.world = world;
             this.settings = settings;
@@ -165,6 +232,9 @@ public class DayCycleManager {
             world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
         }
 
+        /**
+         * Updates the state to reflect new settings, adding or removing custom day trackers as needed.
+         */
         void updateSettings(DaySettings newSettings) {
             this.settings = newSettings;
             customProgress.keySet().removeIf(key -> !newSettings.getCustomTypes().containsKey(key));
@@ -180,6 +250,9 @@ public class DayCycleManager {
                 });
         }
 
+        /**
+         * Advances the world's cycle progress and returns the calculated tick result payload.
+         */
         TickResult tick() {
             double cycleLength = settings.getDayLength() + settings.getNightLength();
             double speed = settings.getSpeedMultiplier();
@@ -226,6 +299,9 @@ public class DayCycleManager {
                 customPercentages, nightsPassed, nightCompleted, phaseChange, triggeredTypes);
         }
 
+        /**
+         * Builds a snapshot of the current world state without mutating progress.
+         */
         CycleSnapshot snapshot() {
             double cycleLength = settings.getDayLength() + settings.getNightLength();
             boolean isDay = cycleProgress < settings.getDayLength();
@@ -240,10 +316,16 @@ public class DayCycleManager {
                 clamp(cyclePercent), customPercentages, settings, nightsPassed);
         }
 
+        /**
+         * Re-enables vanilla daylight cycle for this world.
+         */
         void restoreDefaults() {
             world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true);
         }
 
+        /**
+         * Fires a custom day event immediately for the supplied type key.
+         */
         boolean triggerCustomDay(String type) {
             CustomDayProgress progress = customProgress.get(type.toLowerCase(Locale.ROOT));
             if (progress == null) {
@@ -255,14 +337,23 @@ public class DayCycleManager {
             return true;
         }
 
+        /**
+         * Overrides the nights passed counter using a clamped non-negative value.
+         */
         void setNightsPassed(long nightsPassed) {
             this.nightsPassed = Math.max(0L, nightsPassed);
         }
 
+        /**
+         * Returns the number of nights that have completed for this world.
+         */
         long nightsPassed() {
             return nightsPassed;
         }
 
+        /**
+         * Restricts a value to the inclusive range 0.0-1.0.
+         */
         private double clamp(double value) {
             return Math.max(0.0d, Math.min(1.0d, value));
         }
@@ -272,33 +363,54 @@ public class DayCycleManager {
         private CustomDayType type;
         private double elapsed;
 
+        /**
+         * Tracks progress toward the next trigger for a custom day type.
+         */
         CustomDayProgress(CustomDayType type) {
             this.type = type;
             this.elapsed = 0.0d;
         }
 
+        /**
+         * Refreshes the tracked type, ensuring current progress respects the new interval.
+         */
         void updateType(CustomDayType type) {
             this.type = type;
             this.elapsed = Math.min(this.elapsed, type.getIntervalTicks());
         }
 
+        /**
+         * Advances elapsed progress by the given step and returns the new progress ratio.
+         */
         double advance(double step) {
             elapsed += step;
             return progress();
         }
 
+        /**
+         * Determines whether the accumulated elapsed time is ready to trigger the custom day.
+         */
         boolean shouldTrigger() {
             return elapsed >= type.getIntervalTicks();
         }
 
+        /**
+         * Resets elapsed progress back to zero after a trigger.
+         */
         void reset() {
             elapsed = 0.0d;
         }
 
+        /**
+         * Returns progress toward the next trigger as a ratio between 0 and 1.
+         */
         double progress() {
             return Math.min(1.0d, elapsed / type.getIntervalTicks());
         }
 
+        /**
+         * Retrieves the custom day type being tracked.
+         */
         CustomDayType type() {
             return type;
         }

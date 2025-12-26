@@ -25,15 +25,24 @@ public class CustomDayTriggerEvent extends Event {
     private final World world;
     private final CustomDayType type;
 
+    /**
+     * Creates a trigger event for the given world and custom day type.
+     */
     public CustomDayTriggerEvent(World world, CustomDayType type) {
         this.world = world;
         this.type = type;
     }
 
+    /**
+     * @return world where the trigger occurred
+     */
     public World getWorld() {
         return world;
     }
 
+    /**
+     * @return the custom day type that completed its interval
+     */
     public CustomDayType getType() {
         return type;
     }
@@ -43,6 +52,9 @@ public class CustomDayTriggerEvent extends Event {
         return HANDLERS;
     }
 
+    /**
+     * @return shared handler list for Bukkit registration
+     */
     public static HandlerList getHandlerList() {
         return HANDLERS;
     }
