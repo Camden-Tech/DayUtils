@@ -15,11 +15,19 @@ public class ConfigLoader {
     private final JavaPlugin plugin;
     private final Logger logger;
 
+    /**
+     * Creates a configuration loader bound to the plugin's config file and logger.
+     */
     public ConfigLoader(JavaPlugin plugin) {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
     }
 
+    /**
+     * Reads configuration values, clamping and writing back defaults when necessary.
+     *
+     * @return combined configuration and whether modifications were made
+     */
     public LoadResult load() {
         FileConfiguration config = plugin.getConfig();
         boolean modified = false;
@@ -48,6 +56,9 @@ public class ConfigLoader {
         return new LoadResult(new DayUtilsConfiguration(daySettings, commandSettings, messageSettings), modified);
     }
 
+    /**
+     * Retrieves and clamps a length value from config, logging invalid entries.
+     */
     private long readLength(FileConfiguration config, String path, long defaultValue) {
         Object raw = config.get(path);
         if (!(raw instanceof Number)) {
@@ -67,6 +78,9 @@ public class ConfigLoader {
         return clamped;
     }
 
+    /**
+     * Retrieves and clamps the speed multiplier from config, logging invalid entries.
+     */
     private double readSpeed(FileConfiguration config) {
         Object raw = config.get("day.speed");
         if (!(raw instanceof Number)) {
@@ -86,6 +100,9 @@ public class ConfigLoader {
         return clamped;
     }
 
+    /**
+     * Reads custom day type definitions from configuration and clamps their intervals.
+     */
     private Map<String, CustomDayType> readCustomTypes(FileConfiguration config) {
         Map<String, CustomDayType> customTypes = new LinkedHashMap<>();
         ConfigurationSection section = config.getConfigurationSection("day.customTypes");
@@ -114,6 +131,9 @@ public class ConfigLoader {
         return customTypes;
     }
 
+    /**
+     * Ensures the custom day types section exists, creating it when missing.
+     */
     private boolean ensureCustomSection(FileConfiguration config) {
         if (config.getConfigurationSection("day.customTypes") != null) {
             return false;
@@ -122,6 +142,9 @@ public class ConfigLoader {
         return true;
     }
 
+    /**
+     * Writes a value to configuration if it differs from the current one.
+     */
     private boolean updateValue(FileConfiguration config, String path, Object value) {
         Object existing = config.get(path);
         if (valuesEqual(existing, value)) {
@@ -131,6 +154,9 @@ public class ConfigLoader {
         return true;
     }
 
+    /**
+     * Compares configuration values, treating numbers as equal when their double representation matches.
+     */
     private boolean valuesEqual(Object a, Object b) {
         if (a instanceof Number left && b instanceof Number right) {
             return Double.compare(left.doubleValue(), right.doubleValue()) == 0;

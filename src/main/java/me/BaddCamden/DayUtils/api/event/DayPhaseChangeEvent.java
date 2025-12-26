@@ -27,20 +27,32 @@ public class DayPhaseChangeEvent extends Event {
     private final Phase newPhase;
     private final long nightsPassed;
 
+    /**
+     * Constructs an event describing a shift between night and day.
+     */
     public DayPhaseChangeEvent(World world, Phase newPhase, long nightsPassed) {
         this.world = world;
         this.newPhase = newPhase;
         this.nightsPassed = nightsPassed;
     }
 
+    /**
+     * @return world whose phase changed
+     */
     public World getWorld() {
         return world;
     }
 
+    /**
+     * @return the newly entered phase
+     */
     public Phase getNewPhase() {
         return newPhase;
     }
 
+    /**
+     * @return number of completed nights at the time of this event
+     */
     public long getNightsPassed() {
         return nightsPassed;
     }
@@ -50,6 +62,9 @@ public class DayPhaseChangeEvent extends Event {
         return HANDLERS;
     }
 
+    /**
+     * @return shared handler list for registering listeners
+     */
     public static HandlerList getHandlerList() {
         return HANDLERS;
     }

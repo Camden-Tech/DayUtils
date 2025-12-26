@@ -18,22 +18,37 @@ public final class SettingsConstraints {
     private SettingsConstraints() {
     }
 
+    /**
+     * Clamps a day or night length to the configured limits.
+     */
     public static long clampLength(long value) {
         return clamp(value, MIN_LENGTH_TICKS, MAX_LENGTH_TICKS);
     }
 
+    /**
+     * Clamps a speed multiplier to the allowed range.
+     */
     public static double clampSpeed(double value) {
         return clamp(value, MIN_SPEED, MAX_SPEED);
     }
 
+    /**
+     * Clamps a custom day interval to the same bounds as cycle lengths.
+     */
     public static long clampCustomInterval(long value) {
         return clamp(value, MIN_CUSTOM_INTERVAL, MAX_LENGTH_TICKS);
     }
 
+    /**
+     * Restricts a long value to the provided range.
+     */
     private static long clamp(long value, long min, long max) {
         return Math.max(min, Math.min(max, value));
     }
 
+    /**
+     * Restricts a double value to the provided range.
+     */
     private static double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
     }

@@ -10,6 +10,9 @@ public class DayUtilsConfiguration {
     private final CommandSettings commandSettings;
     private final MessageSettings messageSettings;
 
+    /**
+     * Combines settings sections into a single immutable configuration model.
+     */
     public DayUtilsConfiguration(DaySettings daySettings, CommandSettings commandSettings,
                                  MessageSettings messageSettings) {
         this.daySettings = daySettings;
@@ -17,18 +20,30 @@ public class DayUtilsConfiguration {
         this.messageSettings = messageSettings;
     }
 
+    /**
+     * @return the configured day settings
+     */
     public DaySettings getDaySettings() {
         return daySettings;
     }
 
+    /**
+     * @return command permission settings
+     */
     public CommandSettings getCommandSettings() {
         return commandSettings;
     }
 
+    /**
+     * @return templated plugin messages
+     */
     public MessageSettings getMessageSettings() {
         return messageSettings;
     }
 
+    /**
+     * Loads a configuration model from the provided Bukkit configuration snapshot.
+     */
     public static DayUtilsConfiguration fromConfig(FileConfiguration config) {
         return new DayUtilsConfiguration(
             DaySettings.fromConfig(config),

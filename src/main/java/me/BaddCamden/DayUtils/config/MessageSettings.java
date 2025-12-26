@@ -15,6 +15,9 @@ public class MessageSettings {
     private final NightsPassedMessages setNightsPassed;
     private final StatusMessages status;
 
+    /**
+     * Collects all messages surfaced by the plugin for commands and events.
+     */
     public MessageSettings(String usage, ReloadMessages reload, LengthMessages setDayLength,
                            LengthMessages setNightLength, SpeedMessages setSpeed,
                            TriggerMessages trigger, NightsPassedMessages setNightsPassed, StatusMessages status) {
@@ -28,38 +31,65 @@ public class MessageSettings {
         this.status = status;
     }
 
+    /**
+     * @return the generic usage line for /dayutils
+     */
     public String getUsage() {
         return usage;
     }
 
+    /**
+     * @return reload-related messages
+     */
     public ReloadMessages getReload() {
         return reload;
     }
 
+    /**
+     * @return messages used when setting day length
+     */
     public LengthMessages getSetDayLength() {
         return setDayLength;
     }
 
+    /**
+     * @return messages used when setting night length
+     */
     public LengthMessages getSetNightLength() {
         return setNightLength;
     }
 
+    /**
+     * @return messages used when changing speed multiplier
+     */
     public SpeedMessages getSetSpeed() {
         return setSpeed;
     }
 
+    /**
+     * @return messages for custom day triggers
+     */
     public TriggerMessages getTrigger() {
         return trigger;
     }
 
+    /**
+     * @return messages for manipulating nights passed values
+     */
     public NightsPassedMessages getSetNightsPassed() {
         return setNightsPassed;
     }
 
+    /**
+     * @return status reporting messages
+     */
     public StatusMessages getStatus() {
         return status;
     }
 
+    /**
+     * Reads all message templates from the configuration file.
+     */
     public static MessageSettings fromConfig(FileConfiguration config) {
         String usage = config.getString("messages.usage",
             "&eDayUtils usage: /{label} reload | /{label} trigger <type> [world] | /{label} setdaylength <ticks> | "

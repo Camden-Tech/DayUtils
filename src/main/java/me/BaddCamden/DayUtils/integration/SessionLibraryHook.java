@@ -27,6 +27,11 @@ public class SessionLibraryHook {
     private Method hasActiveSession;
     private long nextResolutionAttempt;
 
+    /**
+     * Creates a new hook that can query SessionLibrary on behalf of the owning plugin.
+     *
+     * @param plugin the plugin requesting time advancement guidance
+     */
     public SessionLibraryHook(Plugin plugin) {
         this.plugin = plugin;
     }
@@ -57,11 +62,20 @@ public class SessionLibraryHook {
         }
     }
 
+    /**
+     * Clears any cached reflection handles so resolution can be attempted again on the next tick.
+     */
     public void resetResolution() {
         this.hasActiveSession = null;
         this.nextResolutionAttempt = 0L;
     }
 
+    /**
+     * Attempts to locate the SessionManager.hasActiveSession() method using reflection.
+     *
+     * @param sessionLibrary the SessionLibrary plugin instance, or {@code null} when absent
+     * @return true when a usable method handle has been cached
+     */
     private boolean resolveSessionManager(Plugin sessionLibrary) {
         if (hasActiveSession != null) {
             return true;
@@ -92,6 +106,12 @@ public class SessionLibraryHook {
         }
     }
 
+    /**
+     * Tries to find a SessionManager class either by common package guesses or by scanning the jar.
+     *
+     * @param sessionLibrary the detected SessionLibrary plugin instance, may be {@code null}
+     * @return the discovered class or {@code null} if it cannot be found
+     */
     private Class<?> locateSessionManagerClass(Plugin sessionLibrary) {
         ClassLoader loader = sessionLibrary != null
             ? sessionLibrary.getClass().getClassLoader()
@@ -137,6 +157,12 @@ public class SessionLibraryHook {
         return null;
     }
 
+    /**
+     * Builds a list of potential fully-qualified SessionManager class names based on plugin metadata.
+     *
+     * @param sessionLibrary the SessionLibrary plugin instance, may be {@code null}
+     * @return ordered list of candidate class names to probe
+     */
     private List<String> candidateClassNames(Plugin sessionLibrary) {
         List<String> candidates = new ArrayList<>();
         if (sessionLibrary != null) {

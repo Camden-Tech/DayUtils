@@ -16,6 +16,9 @@ public class DayUtilsPlugin extends JavaPlugin {
     private DayUtilsApi api;
     private boolean configDirty;
 
+    /**
+     * Boots the plugin by loading configuration, wiring the API, and registering commands.
+     */
     @Override
     public void onEnable() {
         saveDefaultConfig();
@@ -30,6 +33,9 @@ public class DayUtilsPlugin extends JavaPlugin {
         }
     }
 
+    /**
+     * Reloads configuration from disk, restarting the cycle manager when values change.
+     */
     public void reloadConfigurationModel() {
         persistConfigIfDirty();
         reloadConfig();
@@ -41,6 +47,9 @@ public class DayUtilsPlugin extends JavaPlugin {
         restartCycleManager();
     }
 
+    /**
+     * Stops active tasks and flushes pending configuration changes when the plugin is disabled.
+     */
     @Override
     public void onDisable() {
         if (this.cycleManager != null) {
@@ -49,6 +58,11 @@ public class DayUtilsPlugin extends JavaPlugin {
         persistConfigIfDirty();
     }
 
+    /**
+     * Applies updated day settings to the running plugin and marks the config for persistence.
+     *
+     * @param daySettings the new day settings to apply
+     */
     public void updateDaySettings(DaySettings daySettings) {
         this.configurationModel = new DayUtilsConfiguration(daySettings, configurationModel.getCommandSettings(),
             configurationModel.getMessageSettings());
@@ -61,22 +75,43 @@ public class DayUtilsPlugin extends JavaPlugin {
         markConfigDirty();
     }
 
+    /**
+     * Returns the cached configuration model representing the current settings.
+     *
+     * @return the in-memory configuration
+     */
     public DayUtilsConfiguration getConfigurationModel() {
         return configurationModel;
     }
 
+    /**
+     * Provides access to the running cycle manager instance.
+     *
+     * @return the cycle manager controlling world time
+     */
     public DayCycleManager getCycleManager() {
         return cycleManager;
     }
 
+    /**
+     * Exposes the API wrapper for other plugins.
+     *
+     * @return a DayUtilsApi instance
+     */
     public DayUtilsApi getApi() {
         return api;
     }
 
+    /**
+     * Marks the configuration as modified so it will be written to disk at the next opportunity.
+     */
     public void markConfigDirty() {
         this.configDirty = true;
     }
 
+    /**
+     * Stops any running cycle manager and starts a new one using the current configuration model.
+     */
     private void restartCycleManager() {
         if (this.cycleManager != null) {
             this.cycleManager.stop();
@@ -85,6 +120,11 @@ public class DayUtilsPlugin extends JavaPlugin {
         this.cycleManager.start();
     }
 
+    /**
+     * Synchronises the Bukkit configuration object with the provided day settings.
+     *
+     * @param daySettings the settings to write back to config.yml
+     */
     private void syncConfigWith(DaySettings daySettings) {
         getConfig().set("day.length", daySettings.getDayLength());
         getConfig().set("day.nightLength", daySettings.getNightLength());
@@ -96,6 +136,9 @@ public class DayUtilsPlugin extends JavaPlugin {
             section.set(type.getName(), type.getIntervalTicks()));
     }
 
+    /**
+     * Saves the configuration to disk if any writes have been queued.
+     */
     private void persistConfigIfDirty() {
         if (configDirty) {
             saveConfig();
